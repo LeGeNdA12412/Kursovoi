@@ -636,14 +636,23 @@ async def create_order(order_data: schemas.OrderCreate, request: Request, db: Se
             discount_percent=item_data["discount_percent"],
             subtotal=item_data["subtotal"]
         ))
-        # Списываем товар
+        # Списываем товар только из корзины для этого заказа
         p = db.get(models.Product, item_data["product_id"])
         if p:
             p.stock -= item_data["quantity"]
             p.sales += item_data["quantity"]
     
-    # Очищаем корзину
-    db.query(models.CartItem).filter(models.CartItem.cart_id == cart.id).delete()
+    # Очищаем корзину — удаляем ТОЛЬКО товары, которые вошли в заказ
+    # Это предотвращает потерю товаров, добавленных во время оформления
+    ordered_product_ids = set(item_data["product_id"] for item_data in order_items_raw)
+    
+    # Удаляем только те элементы корзины, product_id которых есть в заказе
+    # Используем прямой query чтобы избежать проблем с кэшированием relationships
+    db.query(models.CartItem).filter(
+        models.CartItem.cart_id == cart.id,
+        models.CartItem.product_id.in_(ordered_product_ids)
+    ).delete(synchronize_session=False)
+    
     db.commit()
     
     # ✅ ВОЗВРАЩАЕМ ВРУЧНУЮ СОБРАННЫЙ ОТВЕТ (без model_validate с объектами БД)
