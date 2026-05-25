@@ -5,7 +5,7 @@
 
 // === КОНФИГУРАЦИЯ ===
 const API_BASE = 'http://127.0.0.1:8000/api';
-const FAV_KEY = 'vb_favorites';
+// FAV_KEY больше не нужен — избранное хранится на сервере
 
 // === УТИЛИТЫ ===
 const $ = (sel) => document.querySelector(sel);
@@ -49,32 +49,68 @@ async function api(url, options = {}) {
     }
 }
 
-// === ❤️ ИЗБРАННОЕ ===
-function getFavorites() {
-    try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; }
-    catch { return []; }
+// === ❤️ ИЗБРАННОЕ — СИНХРОНИЗАЦИЯ С СЕРВЕРОМ ===
+// Глобальный кеш избранного (чтобы не запрашивать каждый раз)
+let favoriteIds = [];
+
+// Загружаем избранное с сервера (список ID)
+async function loadFavorites() {
+    try {
+        favoriteIds = await api('/favorites'); // Теперь приходит [1, 5, 12]
+        return favoriteIds;
+    } catch (err) {
+        console.error('❌ Load favorites:', err);
+        favoriteIds = [];
+        return [];
+    }
 }
-function saveFavorites(ids) { localStorage.setItem(FAV_KEY, JSON.stringify(ids)); }
 
-function toggleFavorite(productId) {
-    const favs = getFavorites();
-    const idx = favs.indexOf(productId);
-    if (idx === -1) { favs.push(productId); showNotification('❤️ В избранное', 'success'); }
-    else { favs.splice(idx, 1); showNotification('🤍 Удалено', 'success'); }
-    saveFavorites(favs);
-    updateFavoriteIcons();
-    if (!$('#view-FAVORITES')?.classList.contains('hidden')) renderFavoritesGrid();
+// Добавляем/удаляем товар из избранного
+async function toggleFavorite(productId) {
+    const isFav = favoriteIds.includes(productId);
+    
+    try {
+        if (isFav) {
+            await api(`/favorites/${productId}`, { method: 'DELETE' });
+            favoriteIds = favoriteIds.filter(id => id !== productId);
+            showNotification('🤍 Удалено из избранного', 'success');
+        } else {
+            await api('/favorites', { 
+                method: 'POST', 
+                body: JSON.stringify({ product_id: productId }) 
+            });
+            favoriteIds.push(productId);
+            showNotification('❤️ Добавлено в избранное', 'success');
+        }
+        // Обновляем иконки локально (быстро)
+        updateFavoriteIconsLocal();
+        // Если открыта вкладка избранного — перерисовываем
+        if (!$('#view-FAVORITES')?.classList.contains('hidden')) {
+            renderFavoritesGridLocal();
+        }
+    } catch (err) {
+        showNotification('❌ ' + getErrorMessage(err), 'error');
+    }
 }
 
-function isFavorite(productId) { return getFavorites().includes(productId); }
-
-function updateFavoriteIcons() {
+// Обновляем иконки ♥/♡ (локально, без запроса к серверу)
+function updateFavoriteIconsLocal() {
     $$('.product-favorite').forEach(btn => {
         const pid = parseInt(btn.dataset.pid);
-        if (pid && isFavorite(pid)) { btn.textContent = '♥'; btn.classList.add('active'); }
-        else { btn.textContent = '♡'; btn.classList.remove('active'); }
+        if (pid) {
+            if (favoriteIds.includes(pid)) {
+                btn.textContent = '♥';
+                btn.classList.add('active');
+            } else {
+                btn.textContent = '♡';
+                btn.classList.remove('active');
+            }
+        }
     });
 }
+
+// Проверяем, есть ли товар в избранном (локально)
+function isFavorite(productId) { return favoriteIds.includes(productId); }
 
 // === 🎨 ТОВАРЫ ===
 let allProducts = [];
@@ -159,47 +195,7 @@ function renderProductGrid(products) {
     }).join('');
 }
 
-// === ❤️ ИЗБРАННОЕ ГРИД ===
-function renderFavoritesGrid() {
-    const grid = $('#favorites-grid');
-    if (!grid) return;
-    const favIds = getFavorites();
-    const favProducts = allProducts.filter(p => favIds.includes(p.id) && p.is_active !== false);
-    $('#favorites-count').textContent = favProducts.length;
-    if (!favProducts.length) {
-        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted)"><div style="font-size:48px;margin-bottom:16px">🤍</div><p>В избранном пока нет товаров</p><button class="btn-primary" onclick="switchView('SHOP')" style="margin-top:16px">🛍️ В магазин</button></div>`;
-        return;
-    }
-    grid.innerHTML = favProducts.map(p => {
-        const discount = p.is_discount_active && p.discount_percent > 0 ? p.discount_percent : 0;
-        const displayPrice = p.final_price || p.price;
-        const badge = p.sales > 40 ? '<div class="product-badge bestseller">🔥 ХИТ</div>' : (discount > 0 ? `<div class="product-badge sale">−${discount}%</div>` : '');
-        let productImage;
-        if (p.image_url?.startsWith('/uploads/')) productImage = `<img src="${p.image_url}" alt="${p.name}" class="product-image" loading="lazy">`;
-        else {
-            const colors = { 'Электроника': '#7c3aed', 'Одежда': '#00c853', 'Дом': '#ff6b35' };
-            const color = colors[p.category] || '#6b7280';
-            productImage = `<div class="product-image" style="background:linear-gradient(135deg,${color},${color}cc);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:18px;text-align:center;padding:20px">${p.name}</div>`;
-        }
-        return `
-            <div class="product-card">
-                <div class="product-image-container">
-                    ${badge}
-                    <div class="product-favorite active" data-pid="${p.id}" onclick="toggleFavorite(${p.id})">♥</div>
-                    ${productImage}
-                </div>
-                <div class="product-info">
-                    <div class="product-price-block"><span class="product-price">${Math.round(displayPrice)}</span><span class="product-price-currency">₽</span>${discount>0?`<span class="product-discount">−${discount}%</span>`:''}</div>
-                    <h3 class="product-name">${p.name}</h3>
-                    <div class="product-category">${p.category}</div>
-                    <div class="product-actions">
-                        <button class="btn-add-cart" onclick="addToCart(${p.id})">В корзину</button>
-                        <button class="btn-buy" onclick="buyProduct(${p.id})">Купить</button>
-                    </div>
-                </div>
-            </div>`;
-    }).join('');
-}
+// === ❤️ ИЗБРАННОЕ ГРИД — УДАЛЯЕМ (теперь используем renderFavoritesGridLocal) ===
 
 // === 🌐 ГЛОБАЛЬНЫЕ ФУНКЦИИ ===
 window.buyProduct = async (id) => {
@@ -216,7 +212,7 @@ window.switchView = (view) => {
     $$('.view').forEach(v => v.classList.add('hidden'));
     $(`.nav-link[data-view="${view}"]`)?.classList.add('active');
     $(`#view-${view}`)?.classList.remove('hidden');
-    if (view === 'FAVORITES') renderFavoritesGrid();
+    if (view === 'FAVORITES') renderFavoritesGridLocal();
     if (['ADMIN','MANAGER'].includes(view)) updateStats();
 };
 
