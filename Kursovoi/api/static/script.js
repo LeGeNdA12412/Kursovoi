@@ -117,9 +117,11 @@ let allProducts = [];
 
 async function loadProducts() {
     try {
+        // Сначала загружаем избранное, потом товары
+        await loadFavorites();
         allProducts = await api('/products');
         applyFiltersAndSort();
-        updateFavoriteIcons();
+        updateFavoriteIconsLocal();
     } catch (err) {
         console.error('❌ Load products:', err);
         const grid = $('#product-grid');
@@ -360,7 +362,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             $$('.view').forEach(v => v.classList.add('hidden'));
             btn.classList.add('active');
             $(`#view-${view}`)?.classList.remove('hidden');
-            if (view === 'FAVORITES') renderFavoritesGrid();
+            if (view === 'FAVORITES') renderFavoritesGridLocal();
             if (['ADMIN','MANAGER'].includes(view)) updateStats();
         });
     });
@@ -379,12 +381,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 🔎 Поиск в избранном
     $('#fav-search-input')?.addEventListener('input', () => {
         const search = $('#fav-search-input')?.value?.toLowerCase().trim() || '';
-        const favIds = getFavorites();
-        const filtered = allProducts.filter(p => favIds.includes(p.id) && (!search || p.name.toLowerCase().includes(search)));
+        const filtered = allProducts.filter(p => favoriteIds.includes(p.id) && (!search || p.name.toLowerCase().includes(search)));
         $('#favorites-count').textContent = filtered.length;
-        renderFavoritesGrid();
+        renderFavoritesGridLocal();
     });
-    $('#clear-fav-search')?.addEventListener('click', () => { if ($('#fav-search-input')) $('#fav-search-input').value = ''; renderFavoritesGrid(); });
+    $('#clear-fav-search')?.addEventListener('click', () => { if ($('#fav-search-input')) $('#fav-search-input').value = ''; renderFavoritesGridLocal(); });
     
     // Загрузка
     await loadProducts();
@@ -453,21 +454,6 @@ function updateFavoriteIconsLocal() {
             }
         }
     });
-}
-
-// === 🎨 ТОВАРЫ — обновите loadProducts ===
-async function loadProducts() {
-    try {
-        allProducts = await api('/products');
-        // Сначала загружаем избранное, потом применяем фильтры
-        await loadFavorites();
-        applyFiltersAndSort();
-        updateFavoriteIconsLocal();
-    } catch (err) {
-        console.error('❌ Failed to load products:', err);
-        const grid = $('#product-grid');
-        if (grid) grid.innerHTML = '<p style="color:var(--error);grid-column:1/-1;text-align:center">Ошибка загрузки</p>';
-    }
 }
 
 // === ❤️ ИЗБРАННОЕ — ОТРИСОВКА (локальная, без лишних запросов) ===
