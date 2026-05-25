@@ -393,68 +393,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (['MANAGER','ADMIN'].includes(user.role)) initManager();
     
     console.log('✅ App initialized');
-}); 
-
-// === ❤️ ИЗБРАННОЕ — ИСПРАВЛЕННОЕ ===
-
-// Глобальный кеш избранного (чтобы не запрашивать каждый раз)
-let favoriteIds = [];
-
-// Загружаем избранное с сервера (список ID)
-async function loadFavorites() {
-    try {
-        favoriteIds = await api('/favorites'); // Теперь приходит [1, 5, 12]
-        return favoriteIds;
-    } catch (err) {
-        console.error('❌ Load favorites:', err);
-        favoriteIds = [];
-        return [];
-    }
-}
-
-// Добавляем/удаляем товар из избранного
-async function toggleFavorite(productId) {
-    const isFav = favoriteIds.includes(productId);
-    
-    try {
-        if (isFav) {
-            await api(`/favorites/${productId}`, { method: 'DELETE' });
-            favoriteIds = favoriteIds.filter(id => id !== productId);
-            showNotification('🤍 Удалено из избранного', 'success');
-        } else {
-            await api('/favorites', { 
-                method: 'POST', 
-                body: JSON.stringify({ product_id: productId }) 
-            });
-            favoriteIds.push(productId);
-            showNotification('❤️ Добавлено в избранное', 'success');
-        }
-        // Обновляем иконки локально (быстро)
-        updateFavoriteIconsLocal();
-        // Если открыта вкладка избранного — перерисовываем
-        if (!$('#view-FAVORITES')?.classList.contains('hidden')) {
-            renderFavoritesGridLocal();
-        }
-    } catch (err) {
-        showNotification('❌ ' + getErrorMessage(err), 'error');
-    }
-}
-
-// Обновляем иконки ♥/♡ (локально, без запроса к серверу)
-function updateFavoriteIconsLocal() {
-    $$('.product-favorite').forEach(btn => {
-        const pid = parseInt(btn.dataset.pid);
-        if (pid) {
-            if (favoriteIds.includes(pid)) {
-                btn.textContent = '♥';
-                btn.classList.add('active');
-            } else {
-                btn.textContent = '♡';
-                btn.classList.remove('active');
-            }
-        }
-    });
-}
+});
 
 // === ❤️ ИЗБРАННОЕ — ОТРИСОВКА (локальная, без лишних запросов) ===
 function renderFavoritesGridLocal() {

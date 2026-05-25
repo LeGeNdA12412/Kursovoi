@@ -1,8 +1,7 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Boolean, DateTime, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Boolean, DateTime
 from sqlalchemy.orm import relationship
 from database import Base
 from datetime import datetime
-import sqlalchemy
 
 class User(Base):
     __tablename__ = "users"
@@ -89,10 +88,9 @@ class Favorite(Base):
     user = relationship("User", back_populates="favorites")
     product = relationship("Product", back_populates="favorited_by")
     
-    # Уникальная пара: пользователь + товар (один товар может быть в избранном у пользователя только один раз)
+    # Уникальная пара: пользователь + товар
     __table_args__ = (
-        # Уникальное ограничение на комбинацию user_id + product_id
-        UniqueConstraint('user_id', 'product_id', name='uq_favorite_user_product'),
+        # Один товар может быть в избранном у пользователя только один раз
         {'sqlite_autoincrement': True},
     )
 
