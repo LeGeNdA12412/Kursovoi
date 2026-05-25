@@ -1,0 +1,18 @@
+cd KURSOVOI
+.venv\Scripts\activate
+
+# Устанавливаем нужные пакеты
+pip install "pymysql==1.1.0" "cryptography==41.0.7" "alembic==1.13.1"
+
+# Обновляем requirements.txt
+echo "fastapi==0.109.2
+uvicorn[standard]==0.27.1
+sqlalchemy==2.0.25
+pydantic==2.5.3
+passlib[bcrypt]==1.7.4
+bcrypt==3.2.2
+python-multipart==0.0.6
+pymysql==1.1.0
+cryptography==41.0.7
+alembic==1.13.1
+python-dateutil==2.8.2" > api/requirements.txt

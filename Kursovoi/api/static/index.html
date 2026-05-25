@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VioBlack Market | Операционный Центр</title>
+    
+    <!-- Шрифты и иконки -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Иконка вкладки -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛍️</text></svg>">
+</head>
+<body data-page="main">
+    <!-- Фоновые эффекты -->
+    <div class="mesh-1"></div>
+    <div class="mesh-2"></div>
+
+    <div id="app">
+        <!-- 🔝 Навигация -->
+        <nav class="glass nav-bar">
+            <div class="logo" id="nav-logo">
+                <div class="logo-icon">V</div>
+                <span class="logo-text">VioBlack Market</span>
+            </div>
+            
+            <div class="nav-links">
+                <button class="nav-link active" data-view="SHOP">🛍️ Магазин</button>
+                <button class="nav-link" data-view="FAVORITES">❤️ Избранное</button>
+                <a href="/cart.html" class="nav-link nav-link-cart">🛒 Корзина</a>
+                <button class="nav-link hidden" id="admin-nav" data-view="ADMIN">⚙️ Админ</button>
+                <button class="nav-link hidden" id="manager-nav" data-view="MANAGER">📊 Менеджер</button>
+                
+                <div class="user-pill">
+                    <div class="user-avatar" id="user-avatar"></div>
+                    <div class="user-info">
+                        <div class="user-name" id="current-username">ИМЯ</div>
+                        <div class="user-role" id="current-role">РОЛЬ</div>
+                    </div>
+                    <button id="logout-btn" class="icon-btn" title="Выйти" aria-label="Выйти">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 📦 Основной контент -->
+        <main class="main-content">
+            
+            <!-- === 🛍️ ВИТРИНА ТОВАРОВ === -->
+            <div id="view-SHOP" class="view active">
+                <header class="section-header">
+                    <!-- 🔎 ФИЛЬТРЫ И ПОИСК -->
+                    <div class="market-controls glass-card">
+                        <!-- 🔍 Поиск -->
+                        <div class="search-box">
+                            <input type="text" id="search-input" placeholder="🔍 Поиск товаров...">
+                        </div>
+
+                        <!-- 📂 Категории -->
+                        <div class="filter-group">
+                            <select id="category-filter">
+                                <option value="all">📦 Все категории</option>
+                                <option value="Электроника">🔌 Электроника</option>
+                                <option value="Одежда">👕 Одежда</option>
+                                <option value="Дом">🏠 Дом</option>
+                            </select>
+                        </div>
+
+                        <!-- ↕️ Сортировка -->
+                        <div class="filter-group">
+                            <select id="sort-filter">
+                                <option value="default">↕️ Сортировка</option>
+                                <option value="cheap">💸 Сначала дешёвые</option>
+                                <option value="expensive">💎 Сначала дорогие</option>
+                                <option value="name">🔤 По названию</option>
+                            </select>
+                        </div>
+
+                        <!-- ❌ Сброс -->
+                        <button class="btn-secondary" id="reset-filters">❌ Сбросить</button>
+                    </div>
+
+                    <!-- 📊 Информация -->
+                    <div class="products-info">
+                        Найдено товаров: <span id="products-count">0</span>
+                    </div>
+                    
+                    <h2 class="section-title">Каталог Товаров</h2>
+                    <p class="section-subtitle">Выбирайте лучшие предложения из нашего ассортимента</p>
+                </header>
+                
+                <div class="product-grid" id="product-grid">
+                    <!-- Товары загружаются через JavaScript -->
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                        <p>Загрузка товаров...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- === ❤️ ИЗБРАННОЕ === -->
+            <div id="view-FAVORITES" class="view hidden">
+                <header class="section-header">
+                    <h2 class="section-title">❤️ Избранные товары</h2>
+                    <p class="section-subtitle">Ваши любимые товары в одном месте</p>
+                </header>
+                
+                <!-- 🔎 Поиск в избранном -->
+                <div class="market-controls glass-card">
+                    <div class="search-box">
+                        <input type="text" id="fav-search-input" placeholder="🔍 Поиск в избранном...">
+                    </div>
+                    <button class="btn-secondary" id="clear-fav-search">❌ Очистить</button>
+                </div>
+                
+                <div class="products-info">
+                    В избранном: <span id="favorites-count">0</span> товаров
+                </div>
+                
+                <div class="product-grid" id="favorites-grid">
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                        <p>Загрузка...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- === ⚙️ ПАНЕЛЬ АДМИНИСТРАТОРА === -->
+            <div id="view-ADMIN" class="view hidden">
+                <header class="section-header">
+                    <h2 class="section-title">Панель Администратора</h2>
+                    <p class="section-subtitle">Управление товарами и мониторинг системы</p>
+                </header>
+                
+                <div class="admin-layout">
+                    <!-- Форма добавления товара -->
+                    <section class="glass-card admin-form">
+                        <h3 class="form-title">➕ Добавить Новый Товар</h3>
+                        
+                        <form id="add-product-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="p-name">Название товара *</label>
+                                    <input type="text" id="p-name" placeholder="Например: Нано-часы" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="p-cat">Категория *</label>
+                                    <select id="p-cat" required>
+                                        <option value="">Выберите категорию</option>
+                                        <option value="Электроника">🔌 Электроника</option>
+                                        <option value="Одежда">👕 Одежда</option>
+                                        <option value="Дом">🏠 Дом</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="p-price">Цена (₽) *</label>
+                                    <input type="number" id="p-price" placeholder="999" min="1" step="0.01" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="p-stock">Остаток на складе *</label>
+                                    <input type="number" id="p-stock" placeholder="100" min="0" value="100" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="p-desc">Описание</label>
+                                <textarea id="p-desc" placeholder="Краткое описание товара..." rows="3"></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="p-image">Фото товара</label>
+                                <div class="file-upload">
+                                    <input type="file" id="p-image" accept="image/*" hidden>
+                                    <label for="p-image" class="file-upload-btn">📁 Выбрать изображение</label>
+                                    <span id="file-name" class="file-name">Файл не выбран</span>
+                                </div>
+                                <small class="form-hint">Поддерживаются: JPG, PNG, WEBP (до 5MB)</small>
+                            </div>
+                            
+                            <button type="button" class="btn-primary btn-full" id="add-product-btn">🚀 Опубликовать Товар</button>
+                        </form>
+                    </section>
+                    
+                    <!-- Статистика и аналитика -->
+                    <aside class="admin-sidebar">
+                        <div class="stats-grid">
+                            <div class="glass-card stat-card stat-primary">
+                                <div class="stat-icon">💰</div>
+                                <div class="stat-content">
+                                    <div class="stat-label">Общая выручка</div>
+                                    <div class="stat-value" id="admin-revenue">$0</div>
+                                </div>
+                            </div>
+                            <div class="glass-card stat-card stat-secondary">
+                                <div class="stat-icon">📦</div>
+                                <div class="stat-content">
+                                    <div class="stat-label">Продано единиц</div>
+                                    <div class="stat-value" id="admin-sold">0</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card chart-card">
+                            <h4 class="chart-title">📈 Популярность категорий</h4>
+                            <div id="admin-chart-container">
+                                <div class="chart-placeholder">Загрузка данных...</div>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+
+            <!-- === 📊 ПАНЕЛЬ МЕНЕДЖЕРА === -->
+            <div id="view-MANAGER" class="view hidden">
+                <header class="section-header">
+                    <h2 class="section-title">Аналитический Центр</h2>
+                    <p class="section-subtitle">Мониторинг продаж и эффективности товаров</p>
+                </header>
+                
+                <!-- KPI карточки -->
+                <div class="stats-row">
+                    <div class="glass-card stat-card">
+                        <div class="stat-label">💵 Чистая выручка</div>
+                        <div class="stat-value" id="manager-revenue">$0</div>
+                        <div class="stat-trend positive">+12.5% 📈</div>
+                    </div>
+                    <div class="glass-card stat-card">
+                        <div class="stat-label">🛒 Всего продаж</div>
+                        <div class="stat-value" id="manager-sold">0</div>
+                        <div class="stat-trend positive">+8.3% 📈</div>
+                    </div>
+                    <div class="glass-card stat-card">
+                        <div class="stat-label">⚡ Конверсия</div>
+                        <div class="stat-value text-emerald" id="manager-conversion">98.4%</div>
+                        <div class="stat-trend positive">+2.1% 📈</div>
+                    </div>
+                    <div class="glass-card stat-card">
+                        <div class="stat-label">📦 Активных товаров</div>
+                        <div class="stat-value" id="manager-products">0</div>
+                        <div class="stat-trend neutral">—</div>
+                    </div>
+                </div>
+
+                <!-- Таблица аналитики -->
+                <div class="glass-card table-card">
+                    <div class="table-header">
+                        <h3>📋 Матрица Эффективности Товаров</h3>
+                        <button class="btn-secondary" onclick="updateStats()">🔄 Обновить</button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Товар</th>
+                                    <th>Категория</th>
+                                    <th class="text-right">Продажи</th>
+                                    <th class="text-right">Выручка</th>
+                                    <th class="text-center">Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody id="manager-table-body">
+                                <tr>
+                                    <td colspan="6" class="text-center" style="padding: 40px; color: var(--text-muted);">
+                                        Загрузка данных...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+        </main>
+        
+        <!-- Футер -->
+        <footer class="footer">
+            <p>&copy; 2024 VioBlack Market. Учебный проект курсовой работы.</p>
+        </footer>
+    </div>
+
+    <!-- Скрипт приложения -->
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛒 Корзина | VioBlack Market</title>
+    
+    <!-- Шрифты -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Стили: общие + страница корзины -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="cart.css">
+    
+    <!-- Иконка -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
+</head>
+<body data-page="cart">
+    <!-- Фоновые эффекты -->
+    <div class="mesh-1"></div>
+    <div class="mesh-2"></div>
+
+    <div id="app">
+        <!-- 🔝 Навигация -->
+        <nav class="glass nav-bar">
+            <div class="logo" id="nav-logo">
+                <div class="logo-icon">V</div>
+                <span class="logo-text">VioBlack Market</span>
+            </div>
+            
+            <div class="nav-links">
+                <button class="nav-link" onclick="window.location.href='/index.html'">🛍️ Магазин</button>
+                <button class="nav-link hidden" id="admin-nav" onclick="window.location.href='/index.html#ADMIN'">⚙️ Админ</button>
+                <button class="nav-link hidden" id="manager-nav" onclick="window.location.href='/index.html#MANAGER'">📊 Менеджер</button>
+                
+                <div class="user-pill">
+                    <div class="user-avatar" id="user-avatar"></div>
+                    <div class="user-info">
+                        <div class="user-name" id="current-username">ИМЯ</div>
+                        <div class="user-role" id="current-role">РОЛЬ</div>
+                    </div>
+                    <button id="logout-btn" class="icon-btn" title="Выйти" aria-label="Выйти">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 🛒 Основной контент -->
+        <main class="main-content">
+            <div class="cart-container">
+                
+                <!-- Левая колонка: корзина + добавление товаров -->
+                <section>
+                    <!-- Текущая корзина -->
+                    <div class="glass-card">
+                        <div class="cart-header">
+                            <h1 class="cart-title">🛒 Ваша корзина</h1>
+                            <span class="cart-count" id="cart-count">0 товаров</span>
+                        </div>
+                        
+                        <div id="cart-items" class="cart-items">
+                            <div class="loading-spinner">
+                                <div class="spinner"></div>
+                                <p>Загрузка корзины...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 🔍 Секция добавления товаров -->
+                    <div class="glass-card add-products-section">
+                        <div class="add-products-header">
+                            <h2 class="add-products-title">🔍 Добавить ещё товаров</h2>
+                            <a href="/index.html" class="btn-secondary">🛍️ Весь каталог →</a>
+                        </div>
+                        
+                        <div class="quick-search">
+                            <input type="text" id="quick-search" placeholder="Поиск товаров..." oninput="filterQuickProducts()">
+                            <select id="quick-category" onchange="filterQuickProducts()">
+                                <option value="all">Все категории</option>
+                                <option value="Электроника">🔌 Электроника</option>
+                                <option value="Одежда">👕 Одежда</option>
+                                <option value="Дом">🏠 Дом</option>
+                            </select>
+                        </div>
+                        
+                        <div id="quick-products" class="quick-products-grid">
+                            <div class="loading-spinner" style="grid-column: 1/-1; padding: 20px;">
+                                <div class="spinner" style="width:24px;height:24px;border-width:2px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Правая колонка: итог и оформление -->
+                <aside class="glass-card cart-summary">
+                    <h3 style="margin-bottom: 20px; font-size: 18px;">📋 Итого</h3>
+                    
+                    <div class="summary-row">
+                        <span class="summary-label">Товары</span>
+                        <span class="summary-value" id="summary-items">0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Сумма</span>
+                        <span class="summary-value summary-total" id="summary-total">0 ₽</span>
+                    </div>
+                    
+                    <button class="btn-primary checkout-btn" id="checkout-btn" onclick="toggleCheckout()">
+                        🚀 Оформить заказ
+                    </button>
+                    
+                    <form id="checkout-form" class="checkout-form" onsubmit="handleCheckout(event)">
+                        <div class="form-group small">
+                            <label for="shipping-address">📍 Адрес доставки *</label>
+                            <textarea id="shipping-address" placeholder="г. Москва, ул. Примерная, д. 1, кв. 1" required rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary btn-full" id="confirm-order-btn">
+                            ✅ Подтвердить заказ
+                        </button>
+                        <button type="button" class="btn-secondary btn-full" style="margin-top: 8px;" onclick="toggleCheckout()">
+                            ← Назад
+                        </button>
+                    </form>
+                </aside>
+                
+            </div>
+        </main>
+        
+        <!-- Футер -->
+        <footer class="footer">
+            <p>&copy; 2024 VioBlack Market. Учебный проект курсовой работы.</p>
+        </footer>
+    </div>
+
+    <!-- Уведомления -->
+    <div id="cart-notification" class="cart-notification hidden"></div>
+
+    <!-- Скрипты: сначала общие, потом страница корзины -->
+    <script src="script.js"></script>
+    <script src="cart.js"></script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация | VioBlack Market</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✏️</text></svg>">
+</head>
+<body data-page="register">
+    <div class="mesh-1"></div>
+    <div class="mesh-2"></div>
+
+    <div class="auth-container">
+        <div class="glass auth-card">
+            <!-- Логотип -->
+            <div class="auth-logo">
+                <div class="logo-icon">V</div>
+                <span class="logo-text">VioBlack Market</span>
+            </div>
+            
+            <!-- Заголовок -->
+            <div class="auth-header">
+                <h1>Создать аккаунт</h1>
+                <p>Зарегистрируйтесь для доступа к маркетплейсу<br>
+                <small class="auth-note" style="color: var(--primary); margin-top: 8px; display: block;">👤 Все новые пользователи — покупатели</small></p>
+            </div>
+            
+            <!-- Форма -->
+            <form id="register-form" class="auth-form">
+                <div class="form-group">
+                    <label for="username">Имя пользователя</label>
+                    <input type="text" id="username" placeholder="admin123" required 
+                           pattern="^[a-zA-Z0-9_]{3,50}$" 
+                           title="3-50 символов: буквы, цифры, подчёркивание"
+                           autocomplete="username">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" placeholder="минимум 6 символов" required minlength="6" autocomplete="new-password">
+                    <small class="form-hint">Минимум 6 символов</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password-confirm">Подтвердите пароль</label>
+                    <input type="password" id="password-confirm" placeholder="повторите пароль" required autocomplete="new-password">
+                </div>
+                
+                <div id="register-error" class="form-error"></div>
+                
+                <button type="submit" class="btn-primary btn-full" id="register-btn">
+                    ✨ Зарегистрироваться
+                </button>
+            </form>
+            
+            <!-- Ссылка на вход -->
+            <div class="auth-footer">
+                <span>Уже есть аккаунт?</span>
+                <a href="login.html">Войти</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js" type="module"></script>
+</body>
+</html>
