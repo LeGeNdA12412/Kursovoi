@@ -141,11 +141,12 @@
                 </header>
                 
                 <div class="admin-layout">
-                    <!-- Форма добавления товара -->
+                    <!-- Форма добавления/редактирования товара -->
                     <section class="glass-card admin-form">
-                        <h3 class="form-title">➕ Добавить Новый Товар</h3>
+                        <h3 class="form-title" id="admin-form-title">➕ Добавить Новый Товар</h3>
                         
                         <form id="add-product-form">
+                            <input type="hidden" id="p-id">
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="p-name">Название товара *</label>
@@ -173,6 +174,31 @@
                                 </div>
                             </div>
                             
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="p-discount">Скидка %</label>
+                                    <input type="number" id="p-discount" placeholder="0" min="0" max="100" value="0">
+                                </div>
+                                <div class="form-group">
+                                    <label for="p-bulk-threshold">Опт от (шт)</label>
+                                    <input type="number" id="p-bulk-threshold" placeholder="5" min="1" value="5">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="p-bulk-discount">Опт скидка %</label>
+                                    <input type="number" id="p-bulk-discount" placeholder="5" min="0" max="50" value="5">
+                                </div>
+                                <div class="form-group">
+                                    <label for="p-active">Статус</label>
+                                    <select id="p-active">
+                                        <option value="true">✅ Активен</option>
+                                        <option value="false">❌ Скрыт</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
                             <div class="form-group">
                                 <label for="p-desc">Описание</label>
                                 <textarea id="p-desc" placeholder="Краткое описание товара..." rows="3"></textarea>
@@ -188,8 +214,37 @@
                                 <small class="form-hint">Поддерживаются: JPG, PNG, WEBP (до 5MB)</small>
                             </div>
                             
-                            <button type="button" class="btn-primary btn-full" id="add-product-btn">🚀 Опубликовать Товар</button>
+                            <div class="form-actions">
+                                <button type="button" class="btn-secondary" id="cancel-edit-btn" style="display:none;">✖ Отмена</button>
+                                <button type="button" class="btn-primary btn-full" id="add-product-btn">🚀 Опубликовать Товар</button>
+                            </div>
                         </form>
+                    </section>
+                    
+                    <!-- Список товаров для управления -->
+                    <section class="glass-card admin-products-list">
+                        <h3 class="form-title">📦 Управление Товарами</h3>
+                        <div class="table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Товар</th>
+                                        <th>Цена</th>
+                                        <th>Склад</th>
+                                        <th>Статус</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-products-table-body">
+                                    <tr>
+                                        <td colspan="6" class="text-center" style="padding: 40px; color: var(--text-muted);">
+                                            Загрузка...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </section>
                     
                     <!-- Статистика и аналитика -->
