@@ -261,10 +261,14 @@ async function updateStats() {
 }
 function safeSetText(id, text) { const el = $(`#${id}`); if (el) el.textContent = text; }
 
-// === ⚙️ АДМИН ===
+// === ⚙️ АДМИН И МЕНЕДЖЕР ===
+let productsForEdit = [];
+
 function initAdmin() {
     console.log('🔧 Admin initialized');
     $('#p-image')?.addEventListener('change', function() { $('#file-name').textContent = this.files?.[0]?.name || 'Файл не выбран'; });
+    
+    // Добавление товара
     $('#add-product-btn')?.addEventListener('click', async () => {
         const name = $('#p-name')?.value?.trim(), cat = $('#p-cat')?.value, price = parseFloat($('#p-price')?.value), stock = parseInt($('#p-stock')?.value) || 100, desc = $('#p-desc')?.value?.trim() || '', img = $('#p-image')?.files?.[0];
         if (!name || !price || !cat) return alert('⚠️ Заполните обязательные поля');
@@ -273,11 +277,136 @@ function initAdmin() {
             const res = await fetch(`${API_BASE}/products`, { method:'POST', headers:{'authorization':`Bearer ${getToken()}`}, body:fd });
             const text = await res.text(); if (!res.ok) throw JSON.parse(text);
             alert('✅ Товар добавлен!'); ['p-name','p-desc','p-price','p-cat'].forEach(id=>{if($(`#${id}`))$(`#${id}`).value='';}); if($('#p-image')){$('#p-image').value='';$('#file-name').textContent='Файл не выбран';}
-            loadProducts(); updateStats();
+            loadProducts(); updateStats(); renderAdminProductList();
         } catch (err) { alert('❌ ' + getErrorMessage(err)); }
     });
+    
+    // Рендер списка товаров для редактирования
+    renderAdminProductList();
 }
-function initManager() { console.log('📊 Manager initialized'); updateStats(); }
+
+function initManager() { 
+    console.log('📊 Manager initialized'); 
+    updateStats();
+    renderAdminProductList();
+}
+
+// Рендер списка товаров для админа/менеджера с кнопками редактирования
+async function renderAdminProductList() {
+    const container = $('#admin-products-list');
+    if (!container) return;
+    
+    try {
+        productsForEdit = await api('/products');
+        
+        if (!productsForEdit.length) {
+            container.innerHTML = '<p style="color:var(--text-muted);text-align:center">Товаров нет</p>';
+            return;
+        }
+        
+        container.innerHTML = productsForEdit.map(p => `
+            <div class="admin-product-item" style="display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:var(--surface)">
+                <div style="flex:1">
+                    <strong>${p.name}</strong>
+                    <div style="font-size:12px;color:var(--text-muted)">${p.category} | ${Math.round(p.price)} ₽ | Остаток: ${p.stock}</div>
+                </div>
+                <div style="display:flex;gap:8px">
+                    <button class="btn-secondary" onclick="openEditProduct(${p.id})" style="padding:6px 12px;font-size:12px">✏️ Изменить</button>
+                    ${getUser()?.role === 'ADMIN' ? `<button class="btn-danger" onclick="deleteProduct(${p.id})" style="padding:6px 12px;font-size:12px">🗑️ Удалить</button>` : ''}
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error('❌ Render admin products:', err);
+        container.innerHTML = '<p style="color:var(--error)">Ошибка загрузки списка товаров</p>';
+    }
+}
+
+// Открытие модального окна редактирования
+window.openEditProduct = (productId) => {
+    const product = productsForEdit.find(p => p.id === productId);
+    if (!product) return;
+    
+    $('#edit-p-id').value = productId;
+    $('#edit-p-name').value = product.name;
+    $('#edit-p-price').value = product.price;
+    $('#edit-p-desc').value = product.description || '';
+    $('#edit-p-cat').value = product.category;
+    $('#edit-p-stock').value = product.stock;
+    $('#edit-p-discount').value = product.discount_percent || 0;
+    $('#edit-p-active').checked = product.is_active !== false;
+    
+    $('#edit-product-modal')?.classList.remove('hidden');
+};
+
+// Сохранение изменений товара
+window.saveEditProduct = async () => {
+    const productId = parseInt($('#edit-p-id').value);
+    const name = $('#edit-p-name')?.value?.trim();
+    const price = parseFloat($('#edit-p-price')?.value);
+    const desc = $('#edit-p-desc')?.value?.trim() || '';
+    const cat = $('#edit-p-cat')?.value;
+    const stock = parseInt($('#edit-p-stock')?.value) || 0;
+    const discount = parseInt($('#edit-p-discount')?.value) || 0;
+    const isActive = $('#edit-p-active')?.checked !== false;
+    const img = $('#edit-p-image')?.files?.[0];
+    
+    if (!name || !price || !cat) return alert('⚠️ Заполните обязательные поля');
+    
+    try {
+        const fd = new FormData();
+        fd.append('name', name);
+        fd.append('price', price);
+        fd.append('description', desc);
+        fd.append('category', cat);
+        fd.append('stock', stock);
+        fd.append('discount_percent', discount);
+        fd.append('is_active', isActive);
+        if (img) fd.append('image', img);
+        
+        const res = await fetch(`${API_BASE}/products/${productId}`, {
+            method: 'PUT',
+            headers: { 'authorization': `Bearer ${getToken()}` },
+            body: fd
+        });
+        const text = await res.text();
+        if (!res.ok) throw JSON.parse(text);
+        
+        alert('✅ Товар обновлён!');
+        $('#edit-product-modal')?.classList.add('hidden');
+        loadProducts();
+        updateStats();
+        renderAdminProductList();
+    } catch (err) {
+        alert('❌ ' + getErrorMessage(err));
+    }
+};
+
+// Удаление товара (только ADMIN)
+window.deleteProduct = async (productId) => {
+    if (!confirm('⚠️ Вы уверены? Товар будет помечен как неактивный.')) return;
+    
+    try {
+        const res = await fetch(`${API_BASE}/products/${productId}`, {
+            method: 'DELETE',
+            headers: { 'authorization': `Bearer ${getToken()}` }
+        });
+        const text = await res.text();
+        if (!res.ok) throw JSON.parse(text);
+        
+        alert('✅ Товар удалён');
+        loadProducts();
+        updateStats();
+        renderAdminProductList();
+    } catch (err) {
+        alert('❌ ' + getErrorMessage(err));
+    }
+};
+
+// Закрытие модального окна
+window.closeEditModal = () => {
+    $('#edit-product-modal')?.classList.add('hidden');
+};
 
 // === 🔐 АВТОРИЗАЦИЯ (ДЛЯ LOGIN.HTML) ===
 function initLogin() {

@@ -126,6 +126,13 @@ class CartOut(BaseModel):
 class OrderCreate(BaseModel):
     shipping_address: str = Field(..., min_length=10, max_length=255)
     promo_code: Optional[str] = None  # Промокод для применения
+    
+    @field_validator('shipping_address')
+    @classmethod
+    def validate_address(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError('Адрес не может быть пустым')
+        return v.strip()
 
 class OrderItemOut(BaseModel):
     id: Optional[int] = None

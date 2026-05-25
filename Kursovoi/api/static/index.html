@@ -192,6 +192,14 @@
                         </form>
                     </section>
                     
+                    <!-- Список товаров для редактирования -->
+                    <section class="glass-card admin-form" style="margin-top:24px">
+                        <h3 class="form-title">📦 Управление Товарами</h3>
+                        <div id="admin-products-list" style="max-height:400px;overflow-y:auto">
+                            <p style="color:var(--text-muted);text-align:center">Загрузка...</p>
+                        </div>
+                    </section>
+                    
                     <!-- Статистика и аналитика -->
                     <aside class="admin-sidebar">
                         <div class="stats-grid">
@@ -292,5 +300,66 @@
 
     <!-- Скрипт приложения -->
     <script src="script.js"></script>
+    
+    <!-- Модальное окно редактирования товара -->
+    <div id="edit-product-modal" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:2000">
+        <div class="glass-card" style="width:90%;max-width:500px;max-height:90vh;overflow-y:auto;padding:24px;border-radius:16px;position:relative">
+            <button onclick="closeEditModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-muted)">✕</button>
+            <h3 class="form-title" style="margin-bottom:20px">✏️ Редактировать Товар</h3>
+            
+            <input type="hidden" id="edit-p-id">
+            
+            <div class="form-group">
+                <label for="edit-p-name">Название *</label>
+                <input type="text" id="edit-p-name" required>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="edit-p-price">Цена (₽) *</label>
+                    <input type="number" id="edit-p-price" min="1" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-p-stock">Остаток *</label>
+                    <input type="number" id="edit-p-stock" min="0" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="edit-p-cat">Категория *</label>
+                    <select id="edit-p-cat" required>
+                        <option value="Электроника">🔌 Электроника</option>
+                        <option value="Одежда">👕 Одежда</option>
+                        <option value="Дом">🏠 Дом</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-p-discount">Скидка %</label>
+                    <input type="number" id="edit-p-discount" min="0" max="100" value="0">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="edit-p-desc">Описание</label>
+                <textarea id="edit-p-desc" rows="3"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="edit-p-image">Новое изображение (необязательно)</label>
+                <input type="file" id="edit-p-image" accept="image/*">
+            </div>
+            
+            <div class="form-group" style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="edit-p-active" checked>
+                <label for="edit-p-active" style="margin:0">Товар активен</label>
+            </div>
+            
+            <div style="display:flex;gap:12px;margin-top:24px">
+                <button onclick="saveEditProduct()" class="btn-primary" style="flex:1">💾 Сохранить</button>
+                <button onclick="closeEditModal()" class="btn-secondary" style="flex:1">Отмена</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
