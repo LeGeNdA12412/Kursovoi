@@ -252,6 +252,89 @@ async def create_product(
     print(f"✅ Product created: {db_product.name}, stock={db_product.stock}")
     return db_product
 
+
+@app.put("/api/products/{product_id}", response_model=schemas.ProductOut)
+async def update_product(
+    product_id: int,
+    request: Request,
+    db: Session = Depends(database.get_db),
+    name: str = Form(None),
+    price: float = Form(None),
+    description: str = Form(None),
+    category: str = Form(None),
+    stock: int = Form(None, ge=0),
+    is_active: bool = Form(None),
+    discount_percent: int = Form(None, ge=0, le=100),
+    discount_until: Optional[str] = Form(default=None),
+    bulk_discount_threshold: int = Form(None, ge=1),
+    bulk_discount_percent: int = Form(None, ge=0, le=50),
+    image: Optional[UploadFile] = File(default=None),
+):
+    """Обновить товар (только ADMIN)"""
+    get_admin_user_from_request(request, db)
+    
+    product = db.query(models.Product).filter(models.Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Товар не найден")
+    
+    # Обновляем только переданные поля
+    if name is not None:
+        product.name = name.strip()
+    if price is not None:
+        product.price = price
+    if description is not None:
+        product.description = description.strip()
+    if category is not None:
+        product.category = category.strip()
+    if stock is not None:
+        product.stock = stock
+    if is_active is not None:
+        product.is_active = is_active
+    if discount_percent is not None:
+        product.discount_percent = discount_percent
+    if bulk_discount_threshold is not None:
+        product.bulk_discount_threshold = bulk_discount_threshold
+    if bulk_discount_percent is not None:
+        product.bulk_discount_percent = bulk_discount_percent
+    
+    if discount_until is not None:
+        if discount_until:
+            try:
+                product.discount_until = datetime.fromisoformat(discount_until.replace('Z', '+00:00'))
+            except:
+                pass
+        else:
+            product.discount_until = None
+    
+    # Обработка изображения
+    if image and image.filename:
+        product.image_url = save_upload_file(image)
+    
+    db.commit()
+    db.refresh(product)
+    print(f"✅ Product updated: {product.name}, ID={product.id}")
+    return product
+
+
+@app.delete("/api/products/{product_id}", status_code=200)
+async def delete_product(
+    product_id: int,
+    request: Request,
+    db: Session = Depends(database.get_db),
+):
+    """Удалить товар (только ADMIN)"""
+    get_admin_user_from_request(request, db)
+    
+    product = db.query(models.Product).filter(models.Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Товар не найден")
+    
+    # Мягкое удаление — помечаем как неактивный
+    product.is_active = False
+    db.commit()
+    print(f"✅ Product deleted (soft): {product.name}, ID={product.id}")
+    return {"status": "success", "message": f"Товар '{product.name}' удалён"}
+
 @app.post("/api/register", response_model=schemas.UserOut, status_code=201)
 def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
     if db.query(models.User).filter(models.User.username == user.username).first():

@@ -262,20 +262,181 @@ async function updateStats() {
 function safeSetText(id, text) { const el = $(`#${id}`); if (el) el.textContent = text; }
 
 // === ⚙️ АДМИН ===
+let editingProductId = null;
+
 function initAdmin() {
     console.log('🔧 Admin initialized');
-    $('#p-image')?.addEventListener('change', function() { $('#file-name').textContent = this.files?.[0]?.name || 'Файл не выбран'; });
-    $('#add-product-btn')?.addEventListener('click', async () => {
-        const name = $('#p-name')?.value?.trim(), cat = $('#p-cat')?.value, price = parseFloat($('#p-price')?.value), stock = parseInt($('#p-stock')?.value) || 100, desc = $('#p-desc')?.value?.trim() || '', img = $('#p-image')?.files?.[0];
-        if (!name || !price || !cat) return alert('⚠️ Заполните обязательные поля');
-        try {
-            const fd = new FormData(); fd.append('name',name); fd.append('category',cat); fd.append('price',price); fd.append('stock',stock); fd.append('description',desc); if (img) fd.append('image',img);
-            const res = await fetch(`${API_BASE}/products`, { method:'POST', headers:{'authorization':`Bearer ${getToken()}`}, body:fd });
-            const text = await res.text(); if (!res.ok) throw JSON.parse(text);
-            alert('✅ Товар добавлен!'); ['p-name','p-desc','p-price','p-cat'].forEach(id=>{if($(`#${id}`))$(`#${id}`).value='';}); if($('#p-image')){$('#p-image').value='';$('#file-name').textContent='Файл не выбран';}
-            loadProducts(); updateStats();
-        } catch (err) { alert('❌ ' + getErrorMessage(err)); }
+    
+    // Обработка выбора файла
+    $('#p-image')?.addEventListener('change', function() {
+        $('#file-name').textContent = this.files?.[0]?.name || 'Файл не выбран';
     });
+    
+    // Кнопка отмены редактирования
+    $('#cancel-edit-btn')?.addEventListener('click', () => {
+        resetAdminForm();
+    });
+    
+    // Добавление/обновление товара
+    $('#add-product-btn')?.addEventListener('click', async () => {
+        const id = $('#p-id')?.value;
+        const name = $('#p-name')?.value?.trim();
+        const cat = $('#p-cat')?.value;
+        const price = parseFloat($('#p-price')?.value);
+        const stock = parseInt($('#p-stock')?.value) || 100;
+        const desc = $('#p-desc')?.value?.trim() || '';
+        const discount = parseInt($('#p-discount')?.value) || 0;
+        const bulkThreshold = parseInt($('#p-bulk-threshold')?.value) || 5;
+        const bulkDiscount = parseInt($('#p-bulk-discount')?.value) || 5;
+        const isActive = $('#p-active')?.value === 'true';
+        const img = $('#p-image')?.files?.[0];
+        
+        if (!name || !price || !cat) {
+            showNotification('⚠️ Заполните обязательные поля', 'error');
+            return;
+        }
+        
+        try {
+            const fd = new FormData();
+            fd.append('name', name);
+            fd.append('category', cat);
+            fd.append('price', price);
+            fd.append('stock', stock);
+            fd.append('description', desc);
+            fd.append('discount_percent', discount);
+            fd.append('bulk_discount_threshold', bulkThreshold);
+            fd.append('bulk_discount_percent', bulkDiscount);
+            fd.append('is_active', isActive);
+            if (img) fd.append('image', img);
+            
+            let url, method;
+            if (id) {
+                // Обновление
+                url = `${API_BASE}/products/${id}`;
+                method = 'PUT';
+            } else {
+                // Создание
+                url = `${API_BASE}/products`;
+                method = 'POST';
+            }
+            
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'authorization': `Bearer ${getToken()}` },
+                body: fd
+            });
+            const text = await res.text();
+            if (!res.ok) throw JSON.parse(text);
+            
+            showNotification(id ? '✅ Товар обновлён!' : '✅ Товар добавлен!', 'success');
+            resetAdminForm();
+            loadProducts();
+            renderAdminProductsTable();
+            updateStats();
+        } catch (err) {
+            showNotification('❌ ' + getErrorMessage(err), 'error');
+        }
+    });
+}
+
+// Сброс формы админа
+function resetAdminForm() {
+    editingProductId = null;
+    $('#p-id').value = '';
+    $('#p-name').value = '';
+    $('#p-cat').value = '';
+    $('#p-price').value = '';
+    $('#p-stock').value = '100';
+    $('#p-desc').value = '';
+    $('#p-discount').value = '0';
+    $('#p-bulk-threshold').value = '5';
+    $('#p-bulk-discount').value = '5';
+    $('#p-active').value = 'true';
+    $('#p-image').value = '';
+    $('#file-name').textContent = 'Файл не выбран';
+    $('#admin-form-title').textContent = '➕ Добавить Новый Товар';
+    $('#add-product-btn').textContent = '🚀 Опубликовать Товар';
+    $('#cancel-edit-btn').style.display = 'none';
+}
+
+// Редактирование товара
+async function editProduct(productId) {
+    const product = allProducts.find(p => p.id === productId);
+    if (!product) return;
+    
+    editingProductId = productId;
+    $('#p-id').value = product.id;
+    $('#p-name').value = product.name;
+    $('#p-cat').value = product.category;
+    $('#p-price').value = product.price;
+    $('#p-stock').value = product.stock;
+    $('#p-desc').value = product.description || '';
+    $('#p-discount').value = product.discount_percent || 0;
+    $('#p-bulk-threshold').value = product.bulk_discount_threshold || 5;
+    $('#p-bulk-discount').value = product.bulk_discount_percent || 5;
+    $('#p-active').value = String(product.is_active !== false);
+    
+    $('#admin-form-title').textContent = `✏️ Редактировать: ${product.name}`;
+    $('#add-product-btn').textContent = '💾 Сохранить Изменения';
+    $('#cancel-edit-btn').style.display = 'inline-block';
+    
+    // Прокрутка к форме
+    document.querySelector('.admin-form')?.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Удаление товара
+async function deleteProduct(productId) {
+    if (!confirm('⚠️ Вы уверены, что хотите удалить этот товар?')) return;
+    
+    try {
+        const res = await fetch(`${API_BASE}/products/${productId}`, {
+            method: 'DELETE',
+            headers: { 'authorization': `Bearer ${getToken()}` }
+        });
+        const data = await res.json();
+        if (!res.ok) throw data;
+        
+        showNotification('✅ ' + (data.message || 'Товар удалён'), 'success');
+        loadProducts();
+        renderAdminProductsTable();
+        updateStats();
+    } catch (err) {
+        showNotification('❌ ' + getErrorMessage(err), 'error');
+    }
+}
+
+// Отрисовка таблицы товаров в админке
+function renderAdminProductsTable() {
+    const tbody = $('#admin-products-table-body');
+    if (!tbody) return;
+    
+    const activeProducts = allProducts.filter(p => p.is_active !== false);
+    
+    if (!activeProducts.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding:40px;color:var(--text-muted)">Нет товаров</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = activeProducts.map(p => `
+        <tr>
+            <td>${p.id}</td>
+            <td>
+                <div style="font-weight:500">${p.name}</div>
+                <div style="font-size:12px;color:var(--text-muted)">${p.category}</div>
+            </td>
+            <td>${Math.round(p.price)} ₽</td>
+            <td>${p.stock} шт</td>
+            <td>
+                <span style="padding:4px 8px;border-radius:6px;font-size:12px;background:${p.is_active!==false?'var(--success-bg)':'var(--error-bg)'};color:${p.is_active!==false?'var(--success)':'var(--error)'}">
+                    ${p.is_active!==false?'✅ Активен':'❌ Скрыт'}
+                </span>
+            </td>
+            <td>
+                <button class="btn-sm btn-primary" onclick="editProduct(${p.id})" title="Редактировать">✏️</button>
+                <button class="btn-sm btn-danger" onclick="deleteProduct(${p.id})" title="Удалить">🗑️</button>
+            </td>
+        </tr>
+    `).join('');
 }
 function initManager() { console.log('📊 Manager initialized'); updateStats(); }
 
@@ -389,7 +550,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Загрузка
     await loadProducts();
-    if (user.role==='ADMIN') initAdmin();
+    if (user.role==='ADMIN') {
+        initAdmin();
+        renderAdminProductsTable();
+    }
     if (['MANAGER','ADMIN'].includes(user.role)) initManager();
     
     console.log('✅ App initialized');
