@@ -179,12 +179,34 @@
                                 <textarea id="p-desc" placeholder="Краткое описание товара..." rows="3"></textarea>
                             </div>
                             
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="p-discount">Скидка (%)</label>
+                                    <input type="number" id="p-discount" placeholder="0" min="0" max="100" value="0">
+                                </div>
+                                <div class="form-group">
+                                    <label for="p-discount-until">Действует до</label>
+                                    <input type="datetime-local" id="p-discount-until">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="p-bulk-threshold">Опт от (шт)</label>
+                                    <input type="number" id="p-bulk-threshold" placeholder="5" min="1" value="5">
+                                </div>
+                                <div class="form-group">
+                                    <label for="p-bulk-percent">Опт скидка (%)</label>
+                                    <input type="number" id="p-bulk-percent" placeholder="5" min="0" max="50" value="5">
+                                </div>
+                            </div>
+                            
                             <div class="form-group">
                                 <label for="p-image">Фото товара</label>
                                 <div class="file-upload">
-                                    <input type="file" id="p-image-main" accept="image/*" hidden>
-                                    <label for="p-image-main" class="file-upload-btn">📁 Главное фото</label>
-                                    <span id="file-name-main" class="file-name">Файл не выбран</span>
+                                    <input type="file" id="p-image" accept="image/*" hidden>
+                                    <label for="p-image" class="file-upload-btn">📁 Главное фото</label>
+                                    <span id="file-name" class="file-name">Файл не выбран</span>
                                 </div>
                                 <small class="form-hint">Основное изображение товара</small>
                             </div>
