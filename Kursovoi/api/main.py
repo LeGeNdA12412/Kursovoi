@@ -282,8 +282,29 @@ async def create_product(
         db.commit()
         db.refresh(db_product)  # Обновляем объект чтобы загрузить photos
     
+    # Явно формируем ответ с правильным форматом photos
+    photo_urls = [p.image_url for p in db_product.photos] if db_product.photos else []
+    
     print(f"✅ Product created: {db_product.name}, stock={db_product.stock}, photos={len(all_photos)}")
-    return db_product
+    
+    return schemas.ProductOut(
+        id=db_product.id,
+        name=db_product.name,
+        price=db_product.price,
+        description=db_product.description,
+        category=db_product.category,
+        sales=db_product.sales or 0,
+        stock=db_product.stock,
+        image_url=db_product.image_url or "",
+        is_active=db_product.is_active if db_product.is_active is not None else True,
+        discount_percent=db_product.discount_percent or 0,
+        discount_until=db_product.discount_until,
+        bulk_discount_threshold=db_product.bulk_discount_threshold or 5,
+        bulk_discount_percent=db_product.bulk_discount_percent or 5,
+        final_price=db_product.price,  # Будет пересчитано на клиенте
+        is_discount_active=False,
+        photos=photo_urls
+    )
 
 @app.post("/api/register", response_model=schemas.UserOut, status_code=201)
 def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
