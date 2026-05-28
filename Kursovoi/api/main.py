@@ -3,7 +3,7 @@ from fastapi import FastAPI, Depends, HTTPException, File, UploadFile, Form, Req
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
@@ -181,7 +181,7 @@ if STATIC_DIR.exists():
 
 @app.get("/api/products", response_model=List[schemas.ProductOut])
 def get_products(db: Session = Depends(database.get_db)):
-    products = db.query(models.Product).filter(models.Product.is_active == True).all()
+    products = db.query(models.Product).filter(models.Product.is_active == True).options(joinedload(models.Product.photos)).all()
     result = []
     
     for p in products:
@@ -280,6 +280,7 @@ async def create_product(
     if all_photos:
         db.add_all(all_photos)
         db.commit()
+        db.refresh(db_product)  # Обновляем объект чтобы загрузить photos
     
     print(f"✅ Product created: {db_product.name}, stock={db_product.stock}, photos={len(all_photos)}")
     return db_product
