@@ -1,6 +1,7 @@
 ```
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 71750ce774256613014b295d38f0a69025d1a3a8
 # Python
@@ -91,30 +92,28 @@ pip-delete-this-directory.txt
 nosetests.xml
 coverage.xml
 *.cover
-*.log
-.git/modules/
-.pytest_cache/
-.hypothesis/
-.eggs/
-eggs/
-parts/
-var/
-sdist/
-develop-eggs/
-.installed.cfg
-.lib/
-.srcinfo
--wheels/
-*.egg-info/
-.installed.cfg
-*.egg
+=======
+# Compiled and build artifacts
+*.pyc
+__pycache__/
 
-# Django
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
+# Dependencies
+.venv/
+venv/
+node_modules/
 
+# Logs and temp files
+>>>>>>> 035b4d511096ce8e34e37b61bce0f427227251e0
+*.log
+*.tmp
+*.swp
+
+# Environment
+.env
+.env.local
+.env.*
+
+<<<<<<< HEAD
 # Flask
 instance/
 .webassets-cache
@@ -151,4 +150,19 @@ htmlcov/
 .DS_Store
 Thumbs.db
 >>>>>>> 71750ce774256613014b295d38f0a69025d1a3a8
+=======
+# Editors
+.vscode/
+.idea/
+
+# Coverage reports
+.coverage
+coverage/
+htmlcov/
+
+# Distribution artifacts
+dist/
+build/
+*.egg-info/
+>>>>>>> 035b4d511096ce8e34e37b61bce0f427227251e0
 ```

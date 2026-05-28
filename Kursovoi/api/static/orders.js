@@ -46,14 +46,14 @@ function renderOrders(orders) {
     container.innerHTML = orders.map((order, idx) => {
         const statusColors = {
             'pending': '#f59e0b',
-            'confirmed': '#3b82f6',
+            'processing': '#3b82f6',
             'shipped': '#8b5cf6',
             'delivered': '#10b981',
             'cancelled': '#ef4444'
         };
         const statusNames = {
             'pending': 'В обработке',
-            'confirmed': 'Подтверждён',
+            'processing': 'Обрабатывается',
             'shipped': 'Отправлен',
             'delivered': 'Доставлен',
             'cancelled': 'Отменён'
@@ -93,19 +93,22 @@ function showOrderModal(orderId) {
         const order = orders.find(o => o.id === orderId);
         if (!order) return showNotification('❌ Заказ не найден', 'error');
         
+        const user = getUser();
+        const isAdmin = user && user.role === 'ADMIN';
+        
         const modal = document.getElementById('order-modal');
         const body = document.getElementById('modal-body');
         
         const statusColors = {
             'pending': '#f59e0b',
-            'confirmed': '#3b82f6',
+            'processing': '#3b82f6',
             'shipped': '#8b5cf6',
             'delivered': '#10b981',
             'cancelled': '#ef4444'
         };
         const statusNames = {
             'pending': 'В обработке',
-            'confirmed': 'Подтверждён',
+            'processing': 'Обрабатывается',
             'shipped': 'Отправлен',
             'delivered': 'Доставлен',
             'cancelled': 'Отменён'
@@ -113,7 +116,26 @@ function showOrderModal(orderId) {
         
         let subtotal = order.items.reduce((s, i) => s + i.subtotal, 0);
         
+        // Панель администратора для смены статуса
+        let adminPanel = '';
+        if (isAdmin) {
+            const currentStatus = order.status;
+            adminPanel = `
+                <div style="background:rgba(124,58,237,0.1);padding:16px;border-radius:12px;margin-bottom:24px;border:1px solid var(--primary);">
+                    <h3 style="margin-bottom:12px;font-size:14px;color:var(--primary);">⚙️ Управление заказом (Админ)</h3>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button class="btn-secondary" style="font-size:12px;padding:8px 12px;" onclick="updateOrderStatus(${order.id}, 'pending')" ${currentStatus === 'pending' ? 'disabled style="opacity:0.5"' : ''}>⏳ В обработку</button>
+                        <button class="btn-secondary" style="font-size:12px;padding:8px 12px;" onclick="updateOrderStatus(${order.id}, 'processing')" ${currentStatus === 'processing' ? 'disabled style="opacity:0.5"' : ''}>🔄 Обрабатывается</button>
+                        <button class="btn-secondary" style="font-size:12px;padding:8px 12px;" onclick="updateOrderStatus(${order.id}, 'shipped')" ${currentStatus === 'shipped' ? 'disabled style="opacity:0.5"' : ''}>📤 Отправлен</button>
+                        <button class="btn-secondary" style="font-size:12px;padding:8px 12px;" onclick="updateOrderStatus(${order.id}, 'delivered')" ${currentStatus === 'delivered' ? 'disabled style="opacity:0.5"' : ''}>✅ Доставлен</button>
+                        <button class="btn-secondary" style="font-size:12px;padding:8px 12px;background:var(--error);color:white;" onclick="updateOrderStatus(${order.id}, 'cancelled')" ${currentStatus === 'cancelled' ? 'disabled style="opacity:0.5"' : ''}>❌ Отменён</button>
+                    </div>
+                </div>
+            `;
+        }
+        
         body.innerHTML = `
+            ${adminPanel}
             <div style="text-align:center;margin-bottom:24px;">
                 <div style="font-size:48px;margin-bottom:8px;">📦</div>
                 <h2 style="margin-bottom:4px;">Заказ #${order.id}</h2>
@@ -189,6 +211,36 @@ function showOrderModal(orderId) {
         console.error('❌ Load order:', err);
         showNotification('❌ Не удалось загрузить заказ', 'error');
     });
+}
+
+// === ⚙️ ОБНОВЛЕНИЕ СТАТУСА ЗАКАЗА (АДМИН) ===
+async function updateOrderStatus(orderId, newStatus) {
+    const formData = new FormData();
+    formData.append('status', newStatus);
+    
+    try {
+        const token = localStorage.getItem('vb_token');
+        const response = await fetch(`/api/orders/${orderId}/status`, {
+            method: 'PATCH',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Ошибка обновления');
+        }
+        
+        showNotification(`✅ Статус заказа #${orderId} изменён на "${newStatus}"`, 'success');
+        
+        // Закрываем модальное окно и перезагружаем список
+        closeOrderModal();
+        await loadOrders();
+        
+    } catch (err) {
+        console.error('❌ Update status:', err);
+        showNotification('❌ Не удалось изменить статус: ' + err.message, 'error');
+    }
 }
 
 function closeOrderModal(event) {
