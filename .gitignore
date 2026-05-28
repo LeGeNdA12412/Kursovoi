@@ -2,6 +2,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 71750ce774256613014b295d38f0a69025d1a3a8
 # Python
@@ -95,8 +96,15 @@ coverage.xml
 =======
 # Compiled and build artifacts
 *.pyc
+=======
+# Python
+>>>>>>> b1024b0ca2d70732e35bfb386292d6e61cf5937e
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
 
+<<<<<<< HEAD
 # Dependencies
 .venv/
 venv/
@@ -107,12 +115,17 @@ node_modules/
 *.log
 *.tmp
 *.swp
+=======
+# Static files
+static/
+>>>>>>> b1024b0ca2d70732e35bfb386292d6e61cf5937e
 
 # Environment
 .env
 .env.local
 .env.*
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 # Flask
 instance/
@@ -151,10 +164,21 @@ htmlcov/
 Thumbs.db
 >>>>>>> 71750ce774256613014b295d38f0a69025d1a3a8
 =======
+=======
+# Logs
+*.log
+
+# Dependencies
+venv/
+.venv/
+node_modules/
+
+>>>>>>> b1024b0ca2d70732e35bfb386292d6e61cf5937e
 # Editors
 .vscode/
 .idea/
 
+<<<<<<< HEAD
 # Coverage reports
 .coverage
 coverage/
@@ -165,4 +189,9 @@ dist/
 build/
 *.egg-info/
 >>>>>>> 035b4d511096ce8e34e37b61bce0f427227251e0
+=======
+# OS
+.DS_Store
+Thumbs.db
+>>>>>>> b1024b0ca2d70732e35bfb386292d6e61cf5937e
 ```
