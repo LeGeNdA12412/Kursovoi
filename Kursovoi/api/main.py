@@ -12,6 +12,8 @@ import os
 from pathlib import Path
 import uuid
 import shutil
+import qrcode 
+import uuid  
 
 BASE_DIR = Path(__file__).parent
 STATIC_DIR = BASE_DIR / "static"
@@ -652,6 +654,24 @@ async def create_order(order_data: schemas.OrderCreate, request: Request, db: Se
     )
     db.add(new_order)
     db.commit()
+    unique_code = str(uuid.uuid4()) 
+    qr = qrcode.QRCode(
+    version=1,
+    error_correction=qrcode.constants.ERROR_CORRECT_L,
+    box_size=10,
+    border=4,
+)
+    qr.add_data(unique_code)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    qr_dir = "static/qrcodes"
+    if not os.path.exists(qr_dir):
+        os.makedirs(qr_dir)
+
+    img.save(f"{qr_dir}/{unique_code}.png")
+    img.save(f"static/qrcodes/{unique_code}.png")
+
+    new_order.qr_code = unique_code 
     db.refresh(new_order)  # ← Получаем new_order.id
     
     # Создаём элементы заказа и списываем со склада
