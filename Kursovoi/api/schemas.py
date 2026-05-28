@@ -37,6 +37,19 @@ class ProductOut(ProductBase):
     # 🧮 Вычисляемые поля
     final_price: Optional[float] = None  # Цена с учётом активной скидки
     is_discount_active: bool = False
+    # 📸 Дополнительные фото
+    photos: List[str] = []  # Список URL фотографий
+    
+    @field_validator('photos', mode='before')
+    @classmethod
+    def extract_photo_urls(cls, v):
+        if not v:
+            return []
+        if isinstance(v, list) and len(v) > 0 and hasattr(v[0], 'image_url'):
+            # Если это список объектов ProductPhoto, извлекаем image_url
+            return [photo.image_url for photo in v if photo.image_url]
+        return v if isinstance(v, list) else []
+    
     model_config = ConfigDict(from_attributes=True)
 
 # === Промокоды ===
@@ -125,6 +138,7 @@ class CartOut(BaseModel):
 # === Заказы ===
 class OrderCreate(BaseModel):
     shipping_address: str = Field(..., min_length=10, max_length=255)
+    city: str = Field(default="Уфа", min_length=2, max_length=100)  # Город доставки
     promo_code: Optional[str] = None  # Промокод для применения
 
 class OrderItemOut(BaseModel):
@@ -144,6 +158,8 @@ class OrderOut(BaseModel):
     discount_applied: float
     promo_code_used: Optional[str]
     shipping_address: str
+    city: str = "Уфа"
+    qr_code: Optional[str] = None  # QR-код для получения заказа
     items: List[OrderItemOut]
     model_config = ConfigDict(from_attributes=True)
 

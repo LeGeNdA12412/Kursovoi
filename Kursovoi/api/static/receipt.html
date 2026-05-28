@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📋 Чек заказа | VioBlack Market</title>
+    
+    <!-- Шрифты -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Иконка -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+    
+    <style>
+        .receipt-container { max-width: 700px; margin: 40px auto; padding: 0 20px; }
+        .receipt-card { background: var(--surface); border-radius: 16px; padding: 32px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .receipt-header { text-align: center; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 2px dashed var(--border); }
+        .receipt-title { font-size: 28px; font-weight: 900; color: var(--success); margin-bottom: 8px; }
+        .receipt-subtitle { color: var(--text-muted); font-size: 14px; }
+        .receipt-order-id { font-size: 18px; font-weight: 700; color: var(--primary); margin-top: 12px; }
+        
+        .receipt-section { margin-bottom: 24px; }
+        .receipt-section-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        
+        .receipt-info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .receipt-info-item { background: rgba(124, 58, 237, 0.05); padding: 12px; border-radius: 8px; }
+        .receipt-info-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+        .receipt-info-value { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+        
+        .receipt-items-table { width: 100%; border-collapse: collapse; }
+        .receipt-items-table th { text-align: left; padding: 12px 8px; font-size: 12px; color: var(--text-muted); font-weight: 600; border-bottom: 2px solid var(--border); }
+        .receipt-items-table td { padding: 16px 8px; font-size: 14px; border-bottom: 1px solid var(--border); }
+        .receipt-items-table tr:last-child td { border-bottom: none; }
+        .item-name { font-weight: 600; color: var(--text-primary); }
+        .item-category { font-size: 12px; color: var(--text-muted); }
+        .text-right { text-align: right; }
+        
+        .receipt-totals { margin-top: 24px; padding-top: 24px; border-top: 2px dashed var(--border); }
+        .total-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; }
+        .total-row.final { font-size: 20px; font-weight: 900; color: var(--primary); margin-top: 12px; padding-top: 16px; border-top: 2px solid var(--border); }
+        
+        .receipt-actions { margin-top: 32px; display: flex; gap: 12px; justify-content: center; }
+        .btn-print { background: var(--surface); border: 2px solid var(--border); color: var(--text-primary); }
+        
+        @media print {
+            body * { visibility: hidden; }
+            .receipt-container, .receipt-container * { visibility: visible; }
+            .receipt-container { position: absolute; left: 0; top: 0; width: 100%; }
+            .receipt-actions { display: none; }
+        }
+    </style>
+</head>
+<body data-page="receipt">
+    <!-- Фоновые эффекты -->
+    <div class="mesh-1"></div>
+    <div class="mesh-2"></div>
+
+    <div id="app">
+        <!-- 🔝 Навигация -->
+        <nav class="glass nav-bar">
+            <div class="logo" id="nav-logo">
+                <div class="logo-icon">V</div>
+                <span class="logo-text">VioBlack Market</span>
+            </div>
+            
+            <div class="nav-links">
+                <button class="nav-link" onclick="window.location.href='/index.html'">🛍️ Магазин</button>
+                <a href="/cart.html" class="nav-link">🛒 Корзина</a>
+                
+                <div class="user-pill">
+                    <div class="user-avatar" id="user-avatar"></div>
+                    <div class="user-info">
+                        <div class="user-name" id="current-username">ИМЯ</div>
+                        <div class="user-role" id="current-role">РОЛЬ</div>
+                    </div>
+                    <button id="logout-btn" class="icon-btn" title="Выйти">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 📋 Основной контент -->
+        <main class="main-content">
+            <div class="receipt-container">
+                <div class="receipt-card">
+                    <!-- Заголовок -->
+                    <div class="receipt-header">
+                        <div class="receipt-title">✅ Заказ оформлен!</div>
+                        <div class="receipt-subtitle">Спасибо за покупку в VioBlack Market</div>
+                        <div class="receipt-order-id" id="receipt-order-id">Заказ #0000</div>
+                    </div>
+                    
+                    <!-- Информация о доставке -->
+                    <div class="receipt-section">
+                        <div class="receipt-section-title">📍 Информация о доставке</div>
+                        <div class="receipt-info-grid">
+                            <div class="receipt-info-item">
+                                <div class="receipt-info-label">Город</div>
+                                <div class="receipt-info-value" id="receipt-city">Уфа</div>
+                            </div>
+                            <div class="receipt-info-item">
+                                <div class="receipt-info-label">Адрес</div>
+                                <div class="receipt-info-value" id="receipt-address">-</div>
+                            </div>
+                            <div class="receipt-info-item">
+                                <div class="receipt-info-label">Статус</div>
+                                <div class="receipt-info-value" id="receipt-status">В обработке</div>
+                            </div>
+                            <div class="receipt-info-item">
+                                <div class="receipt-info-label">Дата заказа</div>
+                                <div class="receipt-info-value" id="receipt-date">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Товары -->
+                    <div class="receipt-section">
+                        <div class="receipt-section-title">📦 Товары в заказе</div>
+                        <table class="receipt-items-table">
+                            <thead>
+                                <tr>
+                                    <th>Товар</th>
+                                    <th class="text-right">Кол-во</th>
+                                    <th class="text-right">Цена</th>
+                                    <th class="text-right">Сумма</th>
+                                </tr>
+                            </thead>
+                            <tbody id="receipt-items-body">
+                                <!-- Товары загружаются через JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Итого -->
+                    <div class="receipt-totals">
+                        <div class="total-row">
+                            <span>Подытог:</span>
+                            <span id="receipt-subtotal">0 ₽</span>
+                        </div>
+                        <div class="total-row" id="receipt-discount-row" style="display:none; color: var(--success);">
+                            <span>Скидка:</span>
+                            <span id="receipt-discount">−0 ₽</span>
+                        </div>
+                        <div class="total-row final">
+                            <span>Итого оплачено:</span>
+                            <span id="receipt-total">0 ₽</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Кнопки действий -->
+                    <div class="receipt-actions">
+                        <button class="btn-primary" onclick="window.location.href='/index.html'">🛍️ Продолжить покупки</button>
+                        <button class="btn-secondary btn-print" onclick="window.print()">🖨️ Печать чека</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Футер -->
+        <footer class="footer">
+            <p>&copy; 2024 VioBlack Market. Учебный проект курсовой работы.</p>
+        </footer>
+    </div>
+
+    <!-- Скрипты -->
+    <script src="script.js"></script>
+    <script>
+        // === ЗАГРУЗКА ДАННЫХ ЗАКАЗА ===
+        async function loadReceipt() {
+            const user = getUser();
+            if (!user) { window.location.href = '/login.html'; return; }
+            
+            document.getElementById('current-username').textContent = user.username;
+            document.getElementById('current-role').textContent = {ADMIN:'Админ', MANAGER:'Менеджер', USER:'Покупатель'}[user.role] || 'Покупатель';
+            document.getElementById('user-avatar').textContent = user.username[0]?.toUpperCase() || '👤';
+            document.getElementById('logout-btn')?.addEventListener('click', () => { localStorage.removeItem('vb_token'); window.location.href = '/login.html'; });
+            
+            // Получаем ID заказа из URL или localStorage
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderId = urlParams.get('order_id');
+            
+            try {
+                let order;
+                if (orderId) {
+                    // Загружаем заказ с сервера
+                    const orders = await api('/orders');
+                    order = orders.find(o => o.id == orderId);
+                } else {
+                    // Пробуем из localStorage
+                    order = JSON.parse(localStorage.getItem('last_order'));
+                }
+                
+                if (!order) throw new Error('Заказ не найден');
+                
+                renderReceipt(order);
+            } catch (err) {
+                console.error('❌ Load receipt:', err);
+                document.querySelector('.receipt-card').innerHTML = `
+                    <div style="text-align:center;padding:40px;">
+                        <div style="font-size:48px;margin-bottom:16px;">❌</div>
+                        <h3>Заказ не найден</h3>
+                        <p style="color:var(--text-muted);margin:16px 0;">Не удалось загрузить информацию о заказе</p>
+                        <button class="btn-primary" onclick="window.location.href='/index.html'">🛍️ В магазин</button>
+                    </div>
+                `;
+            }
+        }
+        
+        function renderReceipt(order) {
+            document.getElementById('receipt-order-id').textContent = `Заказ #${order.id}`;
+            document.getElementById('receipt-city').textContent = order.city || 'Уфа';
+            document.getElementById('receipt-address').textContent = order.shipping_address;
+            document.getElementById('receipt-status').textContent = {
+                'pending': 'В обработке',
+                'confirmed': 'Подтверждён',
+                'shipped': 'Отправлен',
+                'delivered': 'Доставлен',
+                'cancelled': 'Отменён'
+            }[order.status] || order.status;
+            document.getElementById('receipt-date').textContent = new Date().toLocaleDateString('ru-RU');
+            
+            // Товары
+            const tbody = document.getElementById('receipt-items-body');
+            let subtotal = 0;
+            tbody.innerHTML = order.items.map(item => {
+                subtotal += item.subtotal;
+                return `<tr>
+                    <td>
+                        <div class="item-name">${item.product_name}</div>
+                        <div class="item-category">Артикул: ${item.product_id}</div>
+                    </td>
+                    <td class="text-right">${item.quantity} шт.</td>
+                    <td class="text-right">${Math.round(item.price_at_order)} ₽</td>
+                    <td class="text-right">${Math.round(item.subtotal)} ₽</td>
+                </tr>`;
+            }).join('');
+            
+            // Итого
+            document.getElementById('receipt-subtotal').textContent = `${Math.round(subtotal)} ₽`;
+            document.getElementById('receipt-total').textContent = `${Math.round(order.total_amount)} ₽`;
+            
+            if (order.discount_applied > 0) {
+                document.getElementById('receipt-discount-row').style.display = 'flex';
+                document.getElementById('receipt-discount').textContent = `−${Math.round(order.discount_applied)} ₽`;
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', loadReceipt);
+    </script>
+</body>
+</html>

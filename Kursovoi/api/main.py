@@ -3,7 +3,7 @@ from fastapi import FastAPI, Depends, HTTPException, File, UploadFile, Form, Req
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
@@ -162,6 +162,10 @@ if STATIC_DIR.exists():
     async def main_html(): return FileResponse(STATIC_DIR / "index.html")
     @app.get("/cart.html")
     async def cart_html(): return FileResponse(STATIC_DIR / "cart.html")
+    @app.get("/orders.html")
+    async def orders_html(): return FileResponse(STATIC_DIR / "orders.html")
+    @app.get("/receipt.html")
+    async def receipt_html(): return FileResponse(STATIC_DIR / "receipt.html")
     @app.get("/style.css")
     async def style_css(): return FileResponse(STATIC_DIR / "style.css")
     @app.get("/cart.css")
@@ -170,12 +174,14 @@ if STATIC_DIR.exists():
     async def main_js(): return FileResponse(STATIC_DIR / "script.js")
     @app.get("/cart.js")
     async def cart_js(): return FileResponse(STATIC_DIR / "cart.js")
+    @app.get("/orders.js")
+    async def orders_js(): return FileResponse(STATIC_DIR / "orders.js")
 
 #  API Endpoints 
 
 @app.get("/api/products", response_model=List[schemas.ProductOut])
 def get_products(db: Session = Depends(database.get_db)):
-    products = db.query(models.Product).filter(models.Product.is_active == True).all()
+    products = db.query(models.Product).filter(models.Product.is_active == True).options(joinedload(models.Product.photos)).all()
     result = []
     
     for p in products:
@@ -183,6 +189,9 @@ def get_products(db: Session = Depends(database.get_db)):
             active = is_discount_active(p)
             discount = p.discount_percent or 0
             final_price = round(p.price * (1 - discount / 100), 2) if active else p.price
+            
+            # Получаем все фото товара
+            photo_urls = [photo.image_url for photo in p.photos] if p.photos else []
             
             obj = schemas.ProductOut(
                 id=p.id,
@@ -199,7 +208,8 @@ def get_products(db: Session = Depends(database.get_db)):
                 bulk_discount_threshold=int(p.bulk_discount_threshold or 5),
                 bulk_discount_percent=int(p.bulk_discount_percent or 5),
                 final_price=float(final_price),
-                is_discount_active=bool(active)
+                is_discount_active=bool(active),
+                photos=photo_urls
             )
             result.append(obj)
         except Exception as e:
@@ -222,6 +232,7 @@ async def create_product(
     bulk_discount_threshold: int = Form(default=5, ge=1),
     bulk_discount_percent: int = Form(default=5, ge=0, le=50),
     image: Optional[UploadFile] = File(default=None),
+    images: List[UploadFile] = File(default=[]),  # Дополнительные фото
 ):
     get_admin_user_from_request(request, db)
     
@@ -230,6 +241,7 @@ async def create_product(
         try: discount_until_dt = datetime.fromisoformat(discount_until.replace('Z', '+00:00'))
         except: pass
         
+    # Сначала создаем товар без изображения
     data = {
         "name": name.strip(),
         "price": price,
@@ -238,7 +250,7 @@ async def create_product(
         "stock": stock,  
         "sales": 0,
         "is_active": True,
-        "image_url": save_upload_file(image) if image and image.filename else "",
+        "image_url": "",  # Заполним позже
         "discount_percent": discount_percent,
         "discount_until": discount_until_dt,
         "bulk_discount_threshold": bulk_discount_threshold,
@@ -247,10 +259,52 @@ async def create_product(
     
     db_product = models.Product(**data)
     db.add(db_product)
-    db.commit()
+    db.commit()  # Коммитим чтобы получить ID
     db.refresh(db_product)
-    print(f"✅ Product created: {db_product.name}, stock={db_product.stock}")
-    return db_product
+    
+    # Сохраняем все фото (основное и дополнительные)
+    all_photos = []
+    main_image_url = ""
+    
+    if image and image.filename:
+        main_image_url = save_upload_file(image)
+        db_product.image_url = main_image_url
+        all_photos.append(models.ProductPhoto(product_id=db_product.id, image_url=main_image_url, is_primary=True, sort_order=0))
+    
+    for idx, img in enumerate(images):
+        if img and img.filename:
+            img_url = save_upload_file(img)
+            is_primary = (idx == 0 and not image)  # Первое доп. фото становится основным если нет главного
+            all_photos.append(models.ProductPhoto(product_id=db_product.id, image_url=img_url, is_primary=is_primary, sort_order=idx+1))
+    
+    if all_photos:
+        db.add_all(all_photos)
+        db.commit()
+        db.refresh(db_product)  # Обновляем объект чтобы загрузить photos
+    
+    # Явно формируем ответ с правильным форматом photos
+    photo_urls = [p.image_url for p in db_product.photos] if db_product.photos else []
+    
+    print(f"✅ Product created: {db_product.name}, stock={db_product.stock}, photos={len(all_photos)}")
+    
+    return schemas.ProductOut(
+        id=db_product.id,
+        name=db_product.name,
+        price=db_product.price,
+        description=db_product.description,
+        category=db_product.category,
+        sales=db_product.sales or 0,
+        stock=db_product.stock,
+        image_url=db_product.image_url or "",
+        is_active=db_product.is_active if db_product.is_active is not None else True,
+        discount_percent=db_product.discount_percent or 0,
+        discount_until=db_product.discount_until,
+        bulk_discount_threshold=db_product.bulk_discount_threshold or 5,
+        bulk_discount_percent=db_product.bulk_discount_percent or 5,
+        final_price=db_product.price,  # Будет пересчитано на клиенте
+        is_discount_active=False,
+        photos=photo_urls
+    )
 
 @app.post("/api/register", response_model=schemas.UserOut, status_code=201)
 def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
@@ -537,6 +591,7 @@ async def create_order(order_data: schemas.OrderCreate, request: Request, db: Se
         discount_applied=promo_discount,
         promo_code_used=promo_used,
         shipping_address=order_data.shipping_address,
+        city=order_data.city,
         status="pending"
     )
     db.add(new_order)
@@ -571,6 +626,8 @@ async def create_order(order_data: schemas.OrderCreate, request: Request, db: Se
         "discount_applied": new_order.discount_applied,
         "promo_code_used": new_order.promo_code_used,
         "shipping_address": new_order.shipping_address,
+        "city": new_order.city,
+        "qr_code": new_order.qr_code,  # QR-код для получения заказа
         "items": order_items_raw  # ← Список словарей, а не объектов БД!
     }
 
@@ -610,10 +667,65 @@ async def get_orders(request: Request, db: Session = Depends(database.get_db)):
             "discount_applied": order.discount_applied,
             "promo_code_used": order.promo_code_used,
             "shipping_address": order.shipping_address,
+            "city": order.city,
+            "qr_code": order.qr_code,  # QR-код для получения заказа
             "items": items_data  # ← Список словарей, а не объектов БД
         })
     
     return result
+
+@app.patch("/api/orders/{order_id}/status", response_model=schemas.OrderOut)
+async def update_order_status(
+    order_id: int,
+    status: str = Form(...),
+    request: Request = None,
+    db: Session = Depends(database.get_db)
+):
+    # Проверяем что пользователь админ
+    current_user = get_admin_user_from_request(request, db)
+    
+    # Находим заказ
+    order = db.query(models.Order).filter(models.Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Заказ не найден")
+    
+    # Проверка допустимых статусов
+    valid_statuses = ["pending", "processing", "shipped", "delivered", "cancelled"]
+    if status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Недопустимый статус. Доступные: {', '.join(valid_statuses)}")
+    
+    # Обновляем статус
+    order.status = status
+    db.commit()
+    db.refresh(order)
+    
+    print(f"✅ Статус заказа #{order_id} изменён на '{status}' администратором {current_user.username}")
+    
+    # Формируем ответ
+    items_data = []
+    for item in order.items:
+        product_name = item.product.name if item.product else "Удалённый товар"
+        items_data.append({
+            "id": item.id,
+            "product_id": item.product_id,
+            "product_name": product_name,
+            "quantity": item.quantity,
+            "price_at_order": item.price_at_order,
+            "discount_percent": item.discount_percent,
+            "subtotal": item.subtotal
+        })
+    
+    return {
+        "id": order.id,
+        "status": order.status,
+        "total_amount": order.total_amount,
+        "discount_applied": order.discount_applied,
+        "promo_code_used": order.promo_code_used,
+        "shipping_address": order.shipping_address,
+        "city": order.city,
+        "qr_code": order.qr_code,
+        "items": items_data
+    }
 
 @app.get("/api/health")
 def health():
