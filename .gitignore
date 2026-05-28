@@ -1,4 +1,5 @@
 ```
+<<<<<<< HEAD
 # Python
 __pycache__/
 *.pyc
@@ -90,4 +91,8 @@ htmlcov/
 .pytest_cache/
 .mypy_cache/
 >>>>>>> c07e04a3365687a4dcbddc7d2d317fd931d39e9e
+=======
+# Database files
+*.db
+>>>>>>> d8cd6675912e7fb2addff387837c0014a6615418
 ```
