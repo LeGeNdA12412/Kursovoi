@@ -12,6 +12,7 @@ __pycache__/
 *.pyd
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 # Database
 *.db
@@ -119,11 +120,55 @@ node_modules/
 # Static files
 static/
 >>>>>>> b1024b0ca2d70732e35bfb386292d6e61cf5937e
+=======
+.Python
+env/
+venv/
+.venv/
+.ENV
+.python-version
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+*.pot
+*.po
+*~
+.pytest_cache/
+.mypy_cache/
+.hypothesis/
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+>>>>>>> 1455f7ffd3354717b12aab9682aacb548696a69a
 
 # Environment
 .env
 .env.local
 .env.*
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -194,4 +239,6 @@ build/
 .DS_Store
 Thumbs.db
 >>>>>>> b1024b0ca2d70732e35bfb386292d6e61cf5937e
+=======
+>>>>>>> 1455f7ffd3354717b12aab9682aacb548696a69a
 ```

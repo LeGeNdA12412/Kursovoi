@@ -39,6 +39,17 @@ class ProductOut(ProductBase):
     is_discount_active: bool = False
     # 📸 Дополнительные фото
     photos: List[str] = []  # Список URL фотографий
+    
+    @field_validator('photos', mode='before')
+    @classmethod
+    def extract_photo_urls(cls, v):
+        if not v:
+            return []
+        if isinstance(v, list) and len(v) > 0 and hasattr(v[0], 'image_url'):
+            # Если это список объектов ProductPhoto, извлекаем image_url
+            return [photo.image_url for photo in v if photo.image_url]
+        return v if isinstance(v, list) else []
+    
     model_config = ConfigDict(from_attributes=True)
 
 # === Промокоды ===
