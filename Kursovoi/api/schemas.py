@@ -37,6 +37,8 @@ class ProductOut(ProductBase):
     # 🧮 Вычисляемые поля
     final_price: Optional[float] = None  # Цена с учётом активной скидки
     is_discount_active: bool = False
+    # 📸 Дополнительные фото
+    photos: List[str] = []  # Список URL фотографий
     model_config = ConfigDict(from_attributes=True)
 
 # === Промокоды ===
@@ -125,6 +127,7 @@ class CartOut(BaseModel):
 # === Заказы ===
 class OrderCreate(BaseModel):
     shipping_address: str = Field(..., min_length=10, max_length=255)
+    city: str = Field(default="Уфа", min_length=2, max_length=100)  # Город доставки
     promo_code: Optional[str] = None  # Промокод для применения
 
 class OrderItemOut(BaseModel):
@@ -144,6 +147,7 @@ class OrderOut(BaseModel):
     discount_applied: float
     promo_code_used: Optional[str]
     shipping_address: str
+    city: str = "Уфа"
     items: List[OrderItemOut]
     model_config = ConfigDict(from_attributes=True)
 

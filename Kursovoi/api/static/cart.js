@@ -203,6 +203,7 @@ function toggleCheckout() {
 
 async function handleCheckout(e) {
     e.preventDefault();
+    const city = document.getElementById('shipping-city')?.value?.trim() || 'Уфа';
     const addr = document.getElementById('shipping-address')?.value?.trim();
     if (!addr) return showNotification('⚠️ Укажите адрес', 'error');
     if (addr.length < 10) return showNotification('⚠️ Мин. 10 символов', 'error');
@@ -210,10 +211,13 @@ async function handleCheckout(e) {
     const btn = document.getElementById('confirm-order-btn');
     btn.disabled = true; btn.textContent = '⏳ Оформляем...';
     try {
-        const order = await api('/orders', { method: 'POST', body: JSON.stringify({ shipping_address: addr }) });
+        const order = await api('/orders', { method: 'POST', body: JSON.stringify({ shipping_address: addr, city: city }) });
         showNotification(`🎉 Заказ #${order.id} оформлен!`, 'success');
+        // Сохраняем данные заказа для отображения в чеке
+        localStorage.setItem('last_order', JSON.stringify(order));
         document.querySelectorAll('button').forEach(b => b.disabled = true);
-        setTimeout(() => window.location.href = '/index.html', 2000);
+        // Перенаправляем на страницу чека
+        setTimeout(() => window.location.href = '/receipt.html?order_id=' + order.id, 1000);
     } catch (err) {
         showNotification('❌ Ошибка: ' + getErrorMessage(err), 'error');
         btn.disabled = false; btn.textContent = '✅ Подтвердить заказ';
