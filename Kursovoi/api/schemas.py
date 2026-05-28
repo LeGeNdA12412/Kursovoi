@@ -148,6 +148,7 @@ class OrderOut(BaseModel):
     promo_code_used: Optional[str]
     shipping_address: str
     city: str = "Уфа"
+    qr_code: Optional[str] = None  # QR-код для получения заказа
     items: List[OrderItemOut]
     model_config = ConfigDict(from_attributes=True)
 
