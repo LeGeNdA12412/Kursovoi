@@ -115,8 +115,19 @@
                     
                     <form id="checkout-form" class="checkout-form" onsubmit="handleCheckout(event)">
                         <div class="form-group small">
+                            <label for="shipping-city">🏙️ Город доставки *</label>
+                            <select id="shipping-city" required>
+                                <option value="Уфа" selected>🏙️ Уфа</option>
+                                <option value="Москва">🏙️ Москва</option>
+                                <option value="Санкт-Петербург">🏙️ Санкт-Петербург</option>
+                                <option value="Казань">🏙️ Казань</option>
+                                <option value="Екатеринбург">🏙️ Екатеринбург</option>
+                                <option value="Новосибирск">🏙️ Новосибирск</option>
+                            </select>
+                        </div>
+                        <div class="form-group small">
                             <label for="shipping-address">📍 Адрес доставки *</label>
-                            <textarea id="shipping-address" placeholder="г. Москва, ул. Примерная, д. 1, кв. 1" required rows="3"></textarea>
+                            <textarea id="shipping-address" placeholder="г. Уфа, ул. Примерная, д. 1, кв. 1" required rows="3"></textarea>
                         </div>
                         <button type="submit" class="btn-primary btn-full" id="confirm-order-btn">
                             ✅ Подтвердить заказ

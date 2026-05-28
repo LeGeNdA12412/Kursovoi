@@ -162,6 +162,8 @@ if STATIC_DIR.exists():
     async def main_html(): return FileResponse(STATIC_DIR / "index.html")
     @app.get("/cart.html")
     async def cart_html(): return FileResponse(STATIC_DIR / "cart.html")
+    @app.get("/receipt.html")
+    async def receipt_html(): return FileResponse(STATIC_DIR / "receipt.html")
     @app.get("/style.css")
     async def style_css(): return FileResponse(STATIC_DIR / "style.css")
     @app.get("/cart.css")
@@ -184,6 +186,9 @@ def get_products(db: Session = Depends(database.get_db)):
             discount = p.discount_percent or 0
             final_price = round(p.price * (1 - discount / 100), 2) if active else p.price
             
+            # Получаем все фото товара
+            photo_urls = [photo.image_url for photo in p.photos] if p.photos else []
+            
             obj = schemas.ProductOut(
                 id=p.id,
                 name=p.name or "Товар",
@@ -199,7 +204,8 @@ def get_products(db: Session = Depends(database.get_db)):
                 bulk_discount_threshold=int(p.bulk_discount_threshold or 5),
                 bulk_discount_percent=int(p.bulk_discount_percent or 5),
                 final_price=float(final_price),
-                is_discount_active=bool(active)
+                is_discount_active=bool(active),
+                photos=photo_urls
             )
             result.append(obj)
         except Exception as e:
@@ -222,6 +228,7 @@ async def create_product(
     bulk_discount_threshold: int = Form(default=5, ge=1),
     bulk_discount_percent: int = Form(default=5, ge=0, le=50),
     image: Optional[UploadFile] = File(default=None),
+    images: List[UploadFile] = File(default=[]),  # Дополнительные фото
 ):
     get_admin_user_from_request(request, db)
     
@@ -249,6 +256,22 @@ async def create_product(
     db.add(db_product)
     db.commit()
     db.refresh(db_product)
+    
+    # Сохраняем дополнительные фото
+    all_photos = []
+    if image and image.filename:
+        main_url = save_upload_file(image)
+        all_photos.append(models.ProductPhoto(product_id=db_product.id, image_url=main_url, is_primary=True, sort_order=0))
+    
+    for idx, img in enumerate(images):
+        if img and img.filename:
+            img_url = save_upload_file(img)
+            all_photos.append(models.ProductPhoto(product_id=db_product.id, image_url=img_url, is_primary=False, sort_order=idx+1))
+    
+    if all_photos:
+        db.add_all(all_photos)
+        db.commit()
+    
     print(f"✅ Product created: {db_product.name}, stock={db_product.stock}")
     return db_product
 
@@ -620,6 +643,7 @@ async def create_order(order_data: schemas.OrderCreate, request: Request, db: Se
         discount_applied=promo_discount,
         promo_code_used=promo_used,
         shipping_address=order_data.shipping_address,
+        city=order_data.city,
         status="pending"
     )
     db.add(new_order)
@@ -663,6 +687,7 @@ async def create_order(order_data: schemas.OrderCreate, request: Request, db: Se
         "discount_applied": new_order.discount_applied,
         "promo_code_used": new_order.promo_code_used,
         "shipping_address": new_order.shipping_address,
+        "city": new_order.city,
         "items": order_items_raw  # ← Список словарей, а не объектов БД!
     }
 
@@ -702,6 +727,7 @@ async def get_orders(request: Request, db: Session = Depends(database.get_db)):
             "discount_applied": order.discount_applied,
             "promo_code_used": order.promo_code_used,
             "shipping_address": order.shipping_address,
+            "city": order.city,
             "items": items_data  # ← Список словарей, а не объектов БД
         })
     

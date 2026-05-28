@@ -23,7 +23,7 @@ class Product(Base):
     category = Column(String(50))
     sales = Column(Integer, default=0)
     stock = Column(Integer, default=100)
-    image_url = Column(String(255), default="")
+    image_url = Column(String(255), default="")  # Основное фото (для совместимости)
     is_active = Column(Boolean, default=True)
     favorited_by = relationship("Favorite", back_populates="product", cascade="all, delete-orphan")
     
@@ -35,6 +35,7 @@ class Product(Base):
     
     cart_items = relationship("CartItem", back_populates="product", cascade="all, delete-orphan")
     order_items = relationship("OrderItem", back_populates="product", cascade="all, delete-orphan")
+    photos = relationship("ProductPhoto", back_populates="product", cascade="all, delete-orphan")
 
 class Cart(Base):
     __tablename__ = "carts"
@@ -61,6 +62,7 @@ class Order(Base):
     discount_applied = Column(Float, default=0)  # Сумма скидки в ₽
     promo_code_used = Column(String(50), nullable=True)  # Использованный промокод
     shipping_address = Column(String(255))
+    city = Column(String(100), default="Уфа")  # Город доставки
     user = relationship("User", back_populates="orders")
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
 
@@ -93,6 +95,17 @@ class Favorite(Base):
         # Один товар может быть в избранном у пользователя только один раз
         {'sqlite_autoincrement': True},
     )
+
+# 📸 Таблица для нескольких фотографий товара
+class ProductPhoto(Base):
+    __tablename__ = "product_photos"
+    id = Column(Integer, primary_key=True, index=True)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    image_url = Column(String(255), nullable=False)
+    is_primary = Column(Boolean, default=False)  # Основное фото
+    sort_order = Column(Integer, default=0)  # Порядок сортировки
+    
+    product = relationship("Product", back_populates="photos")
 
 # 🎫 Таблица промокодов
 class PromoCode(Base):
