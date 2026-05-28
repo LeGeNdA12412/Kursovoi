@@ -267,87 +267,9 @@ let editingProductId = null;
 function initAdmin() {
     console.log('🔧 Admin initialized');
     
-<<<<<<< HEAD
     // Обработка выбора файла
     $('#p-image')?.addEventListener('change', function() {
         $('#file-name').textContent = this.files?.[0]?.name || 'Файл не выбран';
-=======
-    // Обработка выбора основного фото
-    $('#p-image')?.addEventListener('change', function() { 
-        const fileName = this.files?.[0]?.name || 'Файл не выбран';
-        $('#file-name').textContent = fileName; 
-    });
-    
-    // Обработка выбора дополнительных фото
-    $('#p-images')?.addEventListener('change', function() {
-        const count = this.files?.length || 0;
-        const el = $('#file-name-extra');
-        if (el) el.textContent = count > 0 ? `Выбрано файлов: ${count}` : 'Файлы не выбраны';
-    });
-    
-    $('#add-product-btn')?.addEventListener('click', async () => {
-        const name = $('#p-name')?.value?.trim();
-        const cat = $('#p-cat')?.value;
-        const price = parseFloat($('#p-price')?.value);
-        const stock = parseInt($('#p-stock')?.value) || 100;
-        const desc = $('#p-desc')?.value?.trim() || '';
-        const discountPercent = parseInt($('#p-discount')?.value) || 0;
-        const bulkThreshold = parseInt($('#p-bulk-threshold')?.value) || 5;
-        const bulkPercent = parseInt($('#p-bulk-percent')?.value) || 5;
-        const discountUntil = $('#p-discount-until')?.value || null;
-        const mainImg = $('#p-image')?.files?.[0];
-        const extraImages = $('#p-images')?.files || [];
-        
-        if (!name || !price || !cat) return alert('⚠️ Заполните обязательные поля');
-        
-        try {
-            const fd = new FormData();
-            fd.append('name', name);
-            fd.append('category', cat);
-            fd.append('price', price.toString());
-            fd.append('stock', stock.toString());
-            fd.append('description', desc);
-            fd.append('discount_percent', discountPercent.toString());
-            fd.append('bulk_discount_threshold', bulkThreshold.toString());
-            fd.append('bulk_discount_percent', bulkPercent.toString());
-            if (discountUntil) fd.append('discount_until', discountUntil);
-            
-            if (mainImg) fd.append('image', mainImg);
-            
-            // Добавляем все дополнительные фото
-            for (let i = 0; i < extraImages.length; i++) {
-                fd.append('images', extraImages[i]);
-            }
-            
-            const res = await fetch(`${API_BASE}/products`, { 
-                method:'POST', 
-                headers:{'authorization':`Bearer ${getToken()}`}, 
-                body:fd 
-            });
-            
-            const text = await res.text(); 
-            if (!res.ok) throw JSON.parse(text);
-            
-            alert('✅ Товар добавлен!'); 
-            ['p-name','p-desc','p-price','p-cat','p-discount','p-bulk-threshold','p-bulk-percent'].forEach(id=>{
-                if($(`#${id}`)) $(`#${id}`).value='';
-            });
-            if($('#p-image')){
-                $('#p-image').value='';
-                $('#file-name').textContent='Файл не выбран';
-            }
-            if($('#p-images')){
-                $('#p-images').value='';
-                const extraEl = $('#file-name-extra');
-                if (extraEl) extraEl.textContent='Файлы не выбраны';
-            }
-            
-            loadProducts(); 
-            updateStats();
-        } catch (err) { 
-            alert('❌ ' + getErrorMessage(err)); 
-        }
->>>>>>> b1024b0ca2d70732e35bfb386292d6e61cf5937e
     });
     
     // Кнопка отмены редактирования

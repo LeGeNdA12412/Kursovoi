@@ -253,6 +253,35 @@
                             </div>
                         </form>
                     </section>
+
+                    <!-- Статистика и аналитика -->
+                    <aside class="admin-sidebar">
+                        <div class="stats-grid">
+                            <div class="glass-card stat-card stat-primary">
+                                <div class="stat-icon">💰</div>
+                                <div class="stat-content">
+                                    <div class="stat-label">Общая выручка</div>
+                                    <div class="stat-value" id="admin-revenue">$0</div>
+                                </div>
+                            </div>
+                            <div class="glass-card stat-card stat-secondary">
+                                <div class="stat-icon">📦</div>
+                                <div class="stat-content">
+                                    <div class="stat-label">Продано единиц</div>
+                                    <div class="stat-value" id="admin-sold">0</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <h4 class="chart-title">📈 Популярность категорий</h4>
+                            <div id="admin-chart-container">
+                                <div class="chart-placeholder">Загрузка данных...</div>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </div>
                     
                     <!-- Список товаров для управления -->
                     <section class="glass-card admin-products-list">
@@ -280,34 +309,7 @@
                         </div>
                     </section>
                     
-                    <!-- Статистика и аналитика -->
-                    <aside class="admin-sidebar">
-                        <div class="stats-grid">
-                            <div class="glass-card stat-card stat-primary">
-                                <div class="stat-icon">💰</div>
-                                <div class="stat-content">
-                                    <div class="stat-label">Общая выручка</div>
-                                    <div class="stat-value" id="admin-revenue">$0</div>
-                                </div>
-                            </div>
-                            <div class="glass-card stat-card stat-secondary">
-                                <div class="stat-icon">📦</div>
-                                <div class="stat-content">
-                                    <div class="stat-label">Продано единиц</div>
-                                    <div class="stat-value" id="admin-sold">0</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="glass-card chart-card">
-                            <h4 class="chart-title">📈 Популярность категорий</h4>
-                            <div id="admin-chart-container">
-                                <div class="chart-placeholder">Загрузка данных...</div>
-                            </div>
-                        </div>
-                    </aside>
-                </div>
-            </div>
+                    
 
             <!-- === 📊 ПАНЕЛЬ МЕНЕДЖЕРА === -->
             <div id="view-MANAGER" class="view hidden">
