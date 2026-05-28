@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Float, ForeignKey, Boolean, Date
 from sqlalchemy.orm import relationship
 from database import Base
 from datetime import datetime
+import secrets
 
 class User(Base):
     __tablename__ = "users"
@@ -63,8 +64,14 @@ class Order(Base):
     promo_code_used = Column(String(50), nullable=True)  # Использованный промокод
     shipping_address = Column(String(255))
     city = Column(String(100), default="Уфа")  # Город доставки
+    qr_code = Column(String(64), unique=True, nullable=True)  # QR-код для получения заказа
     user = relationship("User", back_populates="orders")
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if not self.qr_code:
+            self.qr_code = secrets.token_hex(16)  # Генерируем уникальный QR-код
 
 class OrderItem(Base):
     __tablename__ = "order_items"

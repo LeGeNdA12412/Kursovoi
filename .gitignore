@@ -1,10 +1,14 @@
 ```
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 71750ce774256613014b295d38f0a69025d1a3a8
 # Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+<<<<<<< HEAD
 <<<<<<< HEAD
 
 # Database
@@ -15,10 +19,13 @@ __pycache__/
 venv/
 env/
 =======
+=======
+>>>>>>> 71750ce774256613014b295d38f0a69025d1a3a8
 .Python
 env/
 venv/
 .venv/
+<<<<<<< HEAD
 .ENV
 .ENV.local
 .env
@@ -74,12 +81,55 @@ target/
 .Trashes
 ehthumbs.db
 Thumbs.db
+=======
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git/modules/
+.pytest_cache/
+.hypothesis/
+.eggs/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+.lib/
+.srcinfo
+-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask
+instance/
+.webassets-cache
+
+# Static assets
+staticfiles/
+compressed/
+>>>>>>> 71750ce774256613014b295d38f0a69025d1a3a8
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+<<<<<<< HEAD
 *.tmp
 
 # Coverage
@@ -95,4 +145,10 @@ htmlcov/
 # Database files
 *.db
 >>>>>>> d8cd6675912e7fb2addff387837c0014a6615418
+=======
+
+# OS
+.DS_Store
+Thumbs.db
+>>>>>>> 71750ce774256613014b295d38f0a69025d1a3a8
 ```

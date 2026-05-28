@@ -33,6 +33,7 @@
                 <button class="nav-link active" data-view="SHOP">🛍️ Магазин</button>
                 <button class="nav-link" data-view="FAVORITES">❤️ Избранное</button>
                 <a href="/cart.html" class="nav-link nav-link-cart">🛒 Корзина</a>
+                <a href="/orders.html" class="nav-link nav-link-orders">📦 Заказы</a>
                 <button class="nav-link hidden" id="admin-nav" data-view="ADMIN">⚙️ Админ</button>
                 <button class="nav-link hidden" id="manager-nav" data-view="MANAGER">📊 Менеджер</button>
                 
@@ -207,11 +208,21 @@
                             <div class="form-group">
                                 <label for="p-image">Фото товара</label>
                                 <div class="file-upload">
-                                    <input type="file" id="p-image" accept="image/*" hidden>
-                                    <label for="p-image" class="file-upload-btn">📁 Выбрать изображение</label>
-                                    <span id="file-name" class="file-name">Файл не выбран</span>
+                                    <input type="file" id="p-image-main" accept="image/*" hidden>
+                                    <label for="p-image-main" class="file-upload-btn">📁 Главное фото</label>
+                                    <span id="file-name-main" class="file-name">Файл не выбран</span>
                                 </div>
-                                <small class="form-hint">Поддерживаются: JPG, PNG, WEBP (до 5MB)</small>
+                                <small class="form-hint">Основное изображение товара</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="p-images">Дополнительные фото</label>
+                                <div class="file-upload">
+                                    <input type="file" id="p-images" accept="image/*" multiple hidden>
+                                    <label for="p-images" class="file-upload-btn">📸 Добавить ещё фото</label>
+                                    <span id="file-name-extra" class="file-name">Файлы не выбраны</span>
+                                </div>
+                                <small class="form-hint">Можно выбрать несколько изображений</small>
                             </div>
                             
                             <div class="form-actions">

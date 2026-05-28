@@ -162,6 +162,8 @@ if STATIC_DIR.exists():
     async def main_html(): return FileResponse(STATIC_DIR / "index.html")
     @app.get("/cart.html")
     async def cart_html(): return FileResponse(STATIC_DIR / "cart.html")
+    @app.get("/orders.html")
+    async def orders_html(): return FileResponse(STATIC_DIR / "orders.html")
     @app.get("/receipt.html")
     async def receipt_html(): return FileResponse(STATIC_DIR / "receipt.html")
     @app.get("/style.css")
@@ -172,6 +174,8 @@ if STATIC_DIR.exists():
     async def main_js(): return FileResponse(STATIC_DIR / "script.js")
     @app.get("/cart.js")
     async def cart_js(): return FileResponse(STATIC_DIR / "cart.js")
+    @app.get("/orders.js")
+    async def orders_js(): return FileResponse(STATIC_DIR / "orders.js")
 
 #  API Endpoints 
 
@@ -688,6 +692,7 @@ async def create_order(order_data: schemas.OrderCreate, request: Request, db: Se
         "promo_code_used": new_order.promo_code_used,
         "shipping_address": new_order.shipping_address,
         "city": new_order.city,
+        "qr_code": new_order.qr_code,  # QR-код для получения заказа
         "items": order_items_raw  # ← Список словарей, а не объектов БД!
     }
 
@@ -728,6 +733,7 @@ async def get_orders(request: Request, db: Session = Depends(database.get_db)):
             "promo_code_used": order.promo_code_used,
             "shipping_address": order.shipping_address,
             "city": order.city,
+            "qr_code": order.qr_code,  # QR-код для получения заказа
             "items": items_data  # ← Список словарей, а не объектов БД
         })
     
